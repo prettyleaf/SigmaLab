@@ -5,12 +5,118 @@ using System.Text;
 
 namespace SigmaLab.Core
 {
+    /// <summary>Маски 3×3 из методички (рис. 4.18), часть из них — с произвольным размером.</summary>
+    public enum MaskKind
+    {
+        MovingAverage, SmallDetails, Laplacian8, Laplacian4, DoubleDiff,
+        VerticalLines, HorizontalLines, DiagonalLeft, DiagonalRight, East, SouthEast
+    }
+
     /// <summary>Ядро свёртки, введённое пользователем (как в окне Convolver программы ImageJ).</summary>
     public static class Masks
     {
         /// <summary>Ядро, которое ImageJ показывает в окне Convolve по умолчанию.</summary>
         public const string ImageJDefault =
             "-1 -1 -1 -1 -1\r\n-1 -1 -1 -1 -1\r\n-1 -1 24 -1 -1\r\n-1 -1 -1 -1 -1\r\n-1 -1 -1 -1 -1";
+
+        public const int MaxTemplateSize = 15;
+
+        public static string KindName(MaskKind k)
+        {
+            switch (k)
+            {
+                case MaskKind.MovingAverage: return "Скользящее среднее";
+                case MaskKind.SmallDetails: return "Выделение малоразмерных деталей из шумов";
+                case MaskKind.Laplacian8: return "Лапласиан для восьми соседей";
+                case MaskKind.Laplacian4: return "Лапласиан для четырёх соседей";
+                case MaskKind.DoubleDiff: return "Двойное дифференцирование";
+                case MaskKind.VerticalLines: return "Выделение вертикальных линий";
+                case MaskKind.HorizontalLines: return "Выделение горизонтальных линий";
+                case MaskKind.DiagonalLeft: return "Выделение «левой» диагонали";
+                case MaskKind.DiagonalRight: return "Выделение «правой» диагонали";
+                case MaskKind.East: return "Оператор «Восток»";
+                case MaskKind.SouthEast: return "Оператор «Юго-Восток»";
+            }
+            return k.ToString();
+        }
+
+        /// <summary>Какие размеры шаблона можно менять: 0 — любой нечётный, иначе размер фиксирован.</summary>
+        public static void FixedSize(MaskKind k, out int width, out int height)
+        {
+            switch (k)
+            {
+                case MaskKind.MovingAverage:
+                case MaskKind.SmallDetails:
+                case MaskKind.Laplacian8: width = height = 0; break;
+                case MaskKind.VerticalLines: width = 3; height = 0; break;
+                case MaskKind.HorizontalLines: width = 0; height = 3; break;
+                default: width = height = 3; break;
+            }
+        }
+
+        /// <summary>
+        /// Шаблон маски width×height (построчно). Скользящее среднее — все единицы; малоразмерные детали —
+        /// биномиальная [1 2 1]**[1 2 1]ᵀ, на большие размеры — строками треугольника Паскаля (1 4 6 4 1, …);
+        /// лапласиан для восьми соседей — все −1, в центре их число; линии удлиняются вдоль направления линии.
+        /// </summary>
+        public static float[] Make(MaskKind kind, int width, int height)
+        {
+            int fw, fh;
+            FixedSize(kind, out fw, out fh);
+            if (fw > 0) width = fw;
+            if (fh > 0) height = fh;
+            if (width < 1 || height < 1 || width % 2 == 0 || height % 2 == 0)
+                throw new ArgumentException("Ширина и высота маски должны быть нечётными (1, 3, 5…).");
+            var k = new float[width * height];
+            switch (kind)
+            {
+                case MaskKind.MovingAverage:
+                    for (int i = 0; i < k.Length; i++) k[i] = 1;
+                    break;
+                case MaskKind.SmallDetails:
+                    double[] bx = Binomial(width), by = Binomial(height);
+                    for (int y = 0; y < height; y++)
+                        for (int x = 0; x < width; x++) k[y * width + x] = (float)(by[y] * bx[x]);
+                    break;
+                case MaskKind.Laplacian8:
+                    for (int i = 0; i < k.Length; i++) k[i] = -1;
+                    k[k.Length / 2] = k.Length - 1;
+                    break;
+                case MaskKind.VerticalLines:
+                    for (int y = 0; y < height; y++) { k[y * 3] = -1; k[y * 3 + 1] = 2; k[y * 3 + 2] = -1; }
+                    break;
+                case MaskKind.HorizontalLines:
+                    for (int x = 0; x < width; x++) { k[x] = -1; k[width + x] = 2; k[2 * width + x] = -1; }
+                    break;
+                default:
+                    Array.Copy(Fixed3x3(kind), k, 9);
+                    break;
+            }
+            return k;
+        }
+
+        private static float[] Fixed3x3(MaskKind kind)
+        {
+            switch (kind)
+            {
+                case MaskKind.Laplacian4: return new float[] { 0, -1, 0, -1, 4, -1, 0, -1, 0 };
+                case MaskKind.DoubleDiff: return new float[] { 1, -2, 1, -2, 4, -2, 1, -2, 1 };
+                case MaskKind.DiagonalLeft: return new float[] { 2, -1, -1, -1, 2, -1, -1, -1, 2 };
+                case MaskKind.DiagonalRight: return new float[] { -1, -1, 2, -1, 2, -1, 2, -1, -1 };
+                case MaskKind.East: return new float[] { -1, 1, 1, -1, -2, 1, -1, 1, 1 };
+                case MaskKind.SouthEast: return new float[] { -1, -1, 1, -1, -2, 1, 1, 1, 1 };
+            }
+            throw new ArgumentException("Нет маски 3×3 для " + kind);
+        }
+
+        /// <summary>Биномиальные коэффициенты C(n−1, i): 1; 1 2 1; 1 4 6 4 1; …</summary>
+        private static double[] Binomial(int n)
+        {
+            var c = new double[n];
+            c[0] = 1;
+            for (int i = 1; i < n; i++) c[i] = c[i - 1] * (n - i) / i;
+            return c;
+        }
 
         public static float Sum(float[] k)
         {

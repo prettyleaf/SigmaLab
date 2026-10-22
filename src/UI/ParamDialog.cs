@@ -173,6 +173,34 @@ namespace SigmaLab.UI
             return nb;
         }
 
+        /// <summary>Два целых поля в одной строке: [0] — ширина, [1] — высота.</summary>
+        public NumBox[] AddSize(string label, int width, int height, int min, int max)
+        {
+            var p = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = Padding.Empty };
+            var boxes = new NumBox[2];
+            string[] caps = { "Ширина", "Высота" };
+            for (int i = 0; i < 2; i++)
+            {
+                var nb = new NumBox { Min = min, Max = max, Caption = caps[i], Width = Theme.S(50), Margin = Padding.Empty };
+                nb.Value = i == 0 ? width : height;
+                nb.TextChanged += (s, e) => Touch();
+                if (i == 1) p.Controls.Add(new Label { Text = "×", AutoSize = true, Margin = new Padding(Theme.S(4), Theme.S(4), Theme.S(4), 0) });
+                p.Controls.Add(nb);
+                boxes[i] = nb;
+            }
+            p.Controls.Add(new Label { Text = "ширина × высота", AutoSize = true, ForeColor = Theme.Muted, Margin = new Padding(Theme.S(6), Theme.S(4), 0, 0) });
+            AddRow(label, p);
+            return boxes;
+        }
+
+        /// <summary>Оба поля AddSize заполнены нечётными целыми в допустимом диапазоне.</summary>
+        public static bool IsOddSize(NumBox[] size)
+        {
+            foreach (var b in size)
+                if (b.Validate() != null || b.IntValue % 2 == 0) return false;
+            return true;
+        }
+
         public ComboBox AddChoice(string label, object[] items, int index, int width = 260)
         {
             var cb = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = Theme.S(width) };

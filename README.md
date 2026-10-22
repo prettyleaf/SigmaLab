@@ -13,13 +13,15 @@ ImageJ и Imatest (модуль Stepchart) и дополнительно поз�
 Программа даёт **инструменты**, а не выполняет лабораторную работу: студент сам открывает изображения, выделяет области,
 вводит маски и параметры, строит гистограммы, считает ОСШ по формулам, заполняет таблицы и строит графики — по методичке.
 Команды названы так же, как в ImageJ/Imatest (с русским переводом), чтобы их легко было найти по тексту методички.
-Пресетов «под пункты методички», готовых масок из методички и автоматических серий измерений нет.
+Шаблоны масок методички (рис. 4.18) лишь подставляют коэффициенты нужного размера в поле свёртки — их можно править;
+автоматических серий измерений нет.
 
 ## Состав
 
 - ImageJ: открытие/сохранение (TIFF без сжатия, PNG, BMP, JPEG), File › New › Image, Image Calculator (32-bit result),
-  Process › Math, Noise (Add Specified Noise и др.), Filters (Convolve с вводом маски, Gaussian Blur, Median, Mean,
-  Minimum, Maximum, Variance), Histogram, Measure, Plot Profile, ROI Manager, отмена, обрезка, типы 8/16/32 бит и RGB.
+  Process › Math, Noise (Add Specified Noise и др.), Filters (Convolve с вводом маски или шаблоном
+  маски методички любого размера, Gaussian Blur, Median, Mean, Minimum, Maximum, Variance — с круглой или прямоугольной
+  апертурой), Histogram, Measure, Plot Profile, ROI Manager, отмена, обрезка, типы 8/16/32 бит и RGB.
 - Imatest: Stepchart с настройками Chart type, Zone detection, Results (Fig. 1/Fig. 2), Plot 1–3; рисунки сохраняются
   в TIFF без сжатия; Test Charts (генератор ступенчатой шкалы).
 - Дополнительно: калькулятор ОСШ по введённым M и σ; ОСШ, ПОСШ, RMSE, SSIM изображения относительно эталона;
@@ -53,7 +55,7 @@ git tag -a v1.0.2 -m "Что нового" && git push origin main v1.0.2
 
 ```
 src/Core   обработка без UI: ImageData, ImageOps (Math, Calculator), Noise, Filters (Convolve, Gaussian, Rank),
-           Masks (разбор ядра свёртки), Stats (Mean, StdDev, гистограмма), Quality (ПОСШ, SSIM), Stepchart, TestCharts
+           Masks (разбор ядра свёртки, шаблоны масок), Stats (Mean, StdDev, гистограмма), Quality (ПОСШ, SSIM), Stepchart, TestCharts
 src/IO     TIFF без сжатия (включая 32-бит float), GDI+ для прочих форматов, кадры видео (avifil32 / ffmpeg)
 src/UI     окна WinForms в цветах ТУСУР (#3C388D, #9ABF38)
 tests      тесты ядра (.NET 8): сверка с прямым перебором, восстановление гаммы и шума Stepchart и т. д.

@@ -167,6 +167,21 @@ namespace SigmaLab.UI
             };
             steps.Add(() => main.TourActivate("снимок_таблицы.bmp"));
             steps.Add(() => modal("convolve", "13_convolve_preview", f => check(f, "Предпросмотр"), false));
+            Action<Control, int, int, int> prepareSize = null;
+            prepareSize = (c, choice, w, h) =>
+            {
+                foreach (Control cc in c.Controls)
+                {
+                    var cb = cc as ComboBox;
+                    if (cb != null) cb.SelectedIndex = choice;
+                    var nb = cc as NumBox;
+                    if (nb != null && nb.Caption == "Ширина") nb.Value = w;
+                    if (nb != null && nb.Caption == "Высота") nb.Value = h;
+                    prepareSize(cc, choice, w, h);
+                }
+            };
+            steps.Add(() => modal("convolve", "13b_convolve_template", f => prepareSize(f, 1 + (int)MaskKind.SmallDetails, 5, 3), false));
+            steps.Add(() => modal("rank", "13c_rank_rect", f => { prepareSize(f, 1, 3, 5); check(f, "Предпросмотр"); }, false));
             steps.Add(() => modal("calc", "14_calculator", null, false));
             steps.Add(() => modal("chart", "15_chart_generator", null, true));
             steps.Add(() => shot(main, "16_main_after_chart"));

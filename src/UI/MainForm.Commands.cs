@@ -459,7 +459,14 @@ namespace SigmaLab.UI
         {
             if (RequireImage() == null) return;
             var dlg = new ParamDialog("Свёртка (Convolve)", "Введите коэффициенты маски через пробел, каждую строку маски — с новой строки " +
-                                                          "(как в Process › Filters › Convolve программы ImageJ). Число строк и столбцов — нечётное.");
+                                                          "(как в Process › Filters › Convolve программы ImageJ). Число строк и столбцов — нечётное. " +
+                                                          "Шаблон подставляет в поле маску из методички (рис. 4.18) заданного размера — её можно изменить.");
+            var kinds = (MaskKind[])Enum.GetValues(typeof(MaskKind));
+            var names = new object[kinds.Length + 1];
+            names[0] = "— своя маска —";
+            for (int i = 0; i < kinds.Length; i++) names[i + 1] = Masks.KindName(kinds[i]);
+            var tpl = dlg.AddChoice("Шаблон:", names, _maskTemplate, 300);
+            var size = dlg.AddSize("Размер шаблона:", _maskSize[0], _maskSize[1], 1, Masks.MaxTemplateSize);
             var text = dlg.AddText("Маска:", _lastKernel, 9, 360);
             var info = dlg.AddNote("");
             var norm = dlg.AddCheck("Нормировать (Normalize Kernel)", true);
@@ -474,14 +481,59 @@ namespace SigmaLab.UI
                     return;
                 }
                 info.ForeColor = Theme.Muted;
-                info.Text = "Размер маски: " + r + "×" + c;
+                info.Text = "Маска " + c + "×" + r + " (ширина × высота), сумма коэффициентов " +
+                            Masks.Sum(k).ToString("0.####", System.Globalization.CultureInfo.CurrentCulture);
             };
             text.TextChanged += (s, e) => describe();
             describe();
+
+            // размер, выбранный пользователем; у шаблонов фиксированного размера в полях показывается их размер
+            int[] want = { _maskSize[0], _maskSize[1] };
+            string generated = null;
+            bool setting = false;
+            Func<string> sizeError = () => tpl.SelectedIndex > 0 && !ParamDialog.IsOddSize(size)
+                ? "Размер шаблона: ширина и высота — нечётные числа от 1 до " + Masks.MaxTemplateSize + "." : null;
+            Action showSize = () =>
+            {
+                int fw = 0, fh = 0;
+                if (tpl.SelectedIndex > 0) Masks.FixedSize(kinds[tpl.SelectedIndex - 1], out fw, out fh);
+                setting = true;
+                size[0].Enabled = tpl.SelectedIndex > 0 && fw == 0;
+                size[1].Enabled = tpl.SelectedIndex > 0 && fh == 0;
+                size[0].Value = fw > 0 ? fw : want[0];
+                size[1].Value = fh > 0 ? fh : want[1];
+                setting = false;
+            };
+            Action generate = () =>
+            {
+                if (tpl.SelectedIndex <= 0) return;
+                string err = sizeError();
+                if (err != null) { info.Text = err; info.ForeColor = Color.Firebrick; return; }
+                int w = size[0].IntValue, h = size[1].IntValue;
+                generated = Masks.ToText(Masks.Make(kinds[tpl.SelectedIndex - 1], w, h), h, w);
+                text.Text = generated;
+            };
+            showSize();
+            if (tpl.SelectedIndex > 0 && sizeError() == null)
+            {
+                string t = Masks.ToText(Masks.Make(kinds[tpl.SelectedIndex - 1], size[0].IntValue, size[1].IntValue), size[1].IntValue, size[0].IntValue);
+                if (t == text.Text) generated = t;
+            }
+            tpl.SelectedIndexChanged += (s, e) => { showSize(); generate(); };
+            for (int i = 0; i < 2; i++)
+            {
+                int j = i;
+                size[j].TextChanged += (s, e) =>
+                {
+                    if (setting || !size[j].Enabled) return;
+                    if (size[j].Validate() == null) want[j] = size[j].IntValue;
+                    generate();
+                };
+            }
             dlg.Validator = () =>
             {
                 float[] k; int r, c; string err;
-                return Masks.TryParse(text.Text, out k, out r, out c, out err) ? null : err;
+                return sizeError() ?? (Masks.TryParse(text.Text, out k, out r, out c, out err) ? null : err);
             };
             dlg.EnablePreview();
             Func<ImageData, ImageData> f = d =>
@@ -490,16 +542,25 @@ namespace SigmaLab.UI
                 if (!Masks.TryParse(text.Text, out k, out r, out c, out err)) throw new ArgumentException(err);
                 return Filters.Convolve(d, k, c, r, norm.Checked);
             };
-            dlg.FormClosed += (s, e) => { if (dlg.DialogResult == DialogResult.OK) _lastKernel = text.Text; };
+            dlg.FormClosed += (s, e) =>
+            {
+                if (dlg.DialogResult != DialogResult.OK) return;
+                _lastKernel = text.Text;
+                _maskTemplate = tpl.SelectedIndex;
+                _maskSize = want;
+            };
             RunFilterDialog(dlg, "Свёртка", f, true, toNew, () =>
             {
                 float[] k; int r, c; string err;
                 Masks.TryParse(text.Text, out k, out r, out c, out err);
-                return "свёртка " + r + "×" + c;
+                string what = text.Text == generated ? Masks.KindName(kinds[tpl.SelectedIndex - 1]) : "свёртка";
+                return what + " " + c + "×" + r;
             });
         }
 
         private string _lastKernel = Masks.ImageJDefault;
+        private int _maskTemplate;
+        private int[] _maskSize = { 3, 3 };
 
         private void GaussianDialog()
         {
@@ -514,20 +575,52 @@ namespace SigmaLab.UI
         private void RankDialog(RankType t)
         {
             if (RequireImage() == null) return;
-            var dlg = new ParamDialog(Filters.RankName(t), "Фильтр с круглой апертурой заданного радиуса (как Process › Filters в ImageJ).");
+            var dlg = new ParamDialog(Filters.RankName(t), "Апертура фильтра — круг заданного радиуса (как Process › Filters в ImageJ) " +
+                                                           "или прямоугольник ширина × высота, например 3×5.");
+            var shape = dlg.AddChoice("Апертура:", new object[] { "круг заданного радиуса", "прямоугольник" }, _rankRect ? 1 : 0);
             var r = dlg.AddNumber("Радиус:", 2, 1, 0.5, 100, "пикс.");
+            var size = dlg.AddSize("Размер:", _rankSize[0], _rankSize[1], 1, 101);
             var area = dlg.AddNote("");
+            Func<bool> rect = () => shape.SelectedIndex == 1;
             Action upd = () =>
             {
-                double v = r.Value;
-                area.Text = double.IsNaN(v) || v < 0.5 ? "" : "Апертура: " + Filters.CircleArea(v) + " пикселей";
+                r.Enabled = !rect();
+                size[0].Enabled = size[1].Enabled = rect();
+                area.ForeColor = Theme.Muted;
+                if (!rect())
+                {
+                    double v = r.Value;
+                    area.Text = double.IsNaN(v) || v < 0.5 ? "" : "Апертура: " + Filters.CircleArea(v) + " пикселей";
+                }
+                else if (ParamDialog.IsOddSize(size))
+                    area.Text = "Апертура: " + size[0].IntValue + "×" + size[1].IntValue + " = " + size[0].IntValue * size[1].IntValue + " пикселей";
+                else
+                {
+                    area.Text = "Ширина и высота — нечётные числа (1, 3, 5…).";
+                    area.ForeColor = Color.Firebrick;
+                }
             };
+            shape.SelectedIndexChanged += (s, e) => upd();
             r.TextChanged += (s, e) => upd();
+            size[0].TextChanged += (s, e) => upd();
+            size[1].TextChanged += (s, e) => upd();
             upd();
+            dlg.Validator = () => rect() && !ParamDialog.IsOddSize(size) ? "Ширина и высота апертуры должны быть нечётными (1, 3, 5…)." : null;
             var toNew = dlg.AddCheck("Результат — в новое изображение", false);
             dlg.EnablePreview();
-            RunFilterDialog(dlg, Filters.RankName(t), d => Filters.Rank(d, t, r.Value), true, toNew, () => Filters.RankName(t) + " r=" + Ui.G(r.Value));
+            dlg.FormClosed += (s, e) =>
+            {
+                if (dlg.DialogResult != DialogResult.OK) return;
+                _rankRect = rect();
+                if (_rankRect) _rankSize = new[] { size[0].IntValue, size[1].IntValue };
+            };
+            RunFilterDialog(dlg, Filters.RankName(t),
+                d => rect() ? Filters.Rank(d, t, size[0].IntValue, size[1].IntValue) : Filters.Rank(d, t, r.Value), true, toNew,
+                () => Filters.RankName(t) + (rect() ? " " + size[0].IntValue + "×" + size[1].IntValue : " r=" + Ui.G(r.Value)));
         }
+
+        private bool _rankRect;
+        private int[] _rankSize = { 3, 3 };
 
         // ================================================================== Анализ
 

@@ -170,11 +170,29 @@ namespace SigmaLab.Core
             return n;
         }
 
+        /// <summary>Ранговый фильтр с круглой апертурой заданного радиуса (как в ImageJ).</summary>
         public static ImageData Rank(ImageData src, RankType type, double radius)
         {
             int kr;
-            int[] hw = CircleHalfWidths(radius, out kr);
-            int W = src.Width, H = src.Height, PW = W + 2 * kr;
+            return Rank(src, type, CircleHalfWidths(radius, out kr));
+        }
+
+        /// <summary>Ранговый фильтр с прямоугольной апертурой width×height (нечётные), например 3×5.</summary>
+        public static ImageData Rank(ImageData src, RankType type, int width, int height)
+        {
+            if (width < 1 || height < 1 || width % 2 == 0 || height % 2 == 0)
+                throw new ArgumentException("Ширина и высота апертуры должны быть нечётными (1, 3, 5…).");
+            var hw = new int[height];
+            for (int j = 0; j < height; j++) hw[j] = width / 2;
+            return Rank(src, type, hw);
+        }
+
+        /// <summary>Апертура задана полуширинами строк hw (их нечётное число, центр — средняя строка).</summary>
+        private static ImageData Rank(ImageData src, RankType type, int[] hw)
+        {
+            int rx = 0, ry = hw.Length / 2;
+            foreach (int d in hw) rx = Math.Max(rx, d);
+            int W = src.Width, H = src.Height, PW = W + 2 * rx;
             var r = src.CreateEmpty();
             bool byteData = src.Type == PixelType.Gray8 || src.Type == PixelType.Rgb24;
             int n = 0;
@@ -182,17 +200,17 @@ namespace SigmaLab.Core
 
             for (int c = 0; c < src.Channels; c++)
             {
-                float[] pad = Pad(src.Planes[c], W, H, kr, kr);
+                float[] pad = Pad(src.Planes[c], W, H, rx, ry);
                 float[] o = r.Planes[c];
                 switch (type)
                 {
                     case RankType.Mean:
                     case RankType.Variance:
-                        MeanVariance(pad, PW, W, H, kr, hw, n, o, type == RankType.Variance);
+                        MeanVariance(pad, PW, W, H, rx, hw, n, o, type == RankType.Variance);
                         break;
                     default:
-                        if (byteData) RankByte(pad, PW, W, H, kr, hw, n, o, type);
-                        else RankFloat(pad, PW, W, H, kr, hw, n, o, type);
+                        if (byteData) RankByte(pad, PW, W, H, rx, hw, n, o, type);
+                        else RankFloat(pad, PW, W, H, rx, hw, n, o, type);
                         break;
                 }
             }
@@ -200,9 +218,10 @@ namespace SigmaLab.Core
             return r;
         }
 
+        // во вспомогательных функциях kr — поле слева/справа (rx); строк апертуры hw.Length, поле сверху/снизу — hw.Length / 2
         private static void MeanVariance(float[] pad, int PW, int W, int H, int kr, int[] hw, int n, float[] o, bool variance)
         {
-            int PH = H + 2 * kr;
+            int PH = H + hw.Length - 1;
             // префиксные суммы по строкам дополненного изображения
             var ps = new double[PH * (PW + 1)];
             double[] ps2 = variance ? new double[PH * (PW + 1)] : null;

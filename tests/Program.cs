@@ -9,6 +9,7 @@ static class T
     static void Near(double a, double b, double tol, string what) { Check(Math.Abs(a - b) <= tol, what + $" (got {a:0.#####}, want {b:0.#####} ±{tol})"); }
 
     static ImageData Rand8(int w, int h, int seed) { var r = new Random(seed); var im = new ImageData(w, h, PixelType.Gray8); for (int i = 0; i < im.PixelCount; i++) im.Planes[0][i] = r.Next(256); return im; }
+    static bool Throws(Action a) { try { a(); return false; } catch (ArgumentException) { return true; } }
 
     static int Main()
     {
@@ -64,6 +65,72 @@ static class T
           var list = new System.Collections.Generic.List<float>(); int X=50, Y=40;
           for (int j=-kr;j<=kr;j++) for (int dx=-hw[j+kr]; dx<=hw[j+kr]; dx++) list.Add(big.Planes[0][(Y+j)*120+X+dx]);
           list.Sort(); Near(med.Planes[0][Y*120+X], list[list.Count/2], 0, "median naive"); }
+
+        // прямоугольная апертура: перебор с повторением краёв; Mean w×h == свёртка со «скользящим средним» w×h
+        foreach (var (aw, ah) in new[] { (3, 5), (5, 3), (7, 7), (1, 3) })
+        {
+            foreach (RankType rt in new[] { RankType.Median, RankType.Minimum, RankType.Maximum, RankType.Mean, RankType.Variance })
+            {
+                var rf = Filters.Rank(ImageOps.ConvertTo(big, PixelType.Gray32), rt, aw, ah);
+                double md = 0;
+                for (int y = 0; y < 90; y += 7) for (int x = 0; x < 120; x += 5)
+                {
+                    var win = new System.Collections.Generic.List<float>();
+                    for (int v = -ah / 2; v <= ah / 2; v++) for (int u = -aw / 2; u <= aw / 2; u++)
+                        win.Add(big.Planes[0][Math.Clamp(y + v, 0, 89) * 120 + Math.Clamp(x + u, 0, 119)]);
+                    win.Sort();
+                    double mean = 0, m2 = 0; foreach (float w in win) { mean += w; m2 += (double)w * w; }
+                    mean /= win.Count;
+                    double expect = rt == RankType.Median ? win[win.Count / 2] : rt == RankType.Minimum ? win[0] : rt == RankType.Maximum ? win[^1]
+                                  : rt == RankType.Mean ? mean : m2 / win.Count - mean * mean;
+                    md = Math.Max(md, Math.Abs(expect - rf.Planes[0][y * 120 + x]));
+                }
+                Near(md, 0, rt == RankType.Variance ? 0.05 : 1e-3, $"rank rect {rt} {aw}x{ah} brute force");
+                if (rt != RankType.Mean && rt != RankType.Variance)
+                {
+                    var rb = Filters.Rank(big, rt, aw, ah);
+                    double d = 0; for (int i = 0; i < rb.PixelCount; i++) d = Math.Max(d, Math.Abs(rb.Planes[0][i] - rf.Planes[0][i]));
+                    Near(d, 0, 0, $"rank rect byte==float {rt} {aw}x{ah}");
+                }
+            }
+            var mean8 = Filters.Rank(big, RankType.Mean, aw, ah);
+            var conv8 = Filters.Convolve(big, Masks.Make(MaskKind.MovingAverage, aw, ah), aw, ah, true);
+            double dm = 0; for (int i = 0; i < mean8.PixelCount; i++) dm = Math.Max(dm, Math.Abs(mean8.Planes[0][i] - conv8.Planes[0][i]));
+            Near(dm, 0, 0, $"mean {aw}x{ah} == moving average mask");
+        }
+        Check(Throws(() => Filters.Rank(big, RankType.Median, 4, 3)), "rank rect rejects even width");
+
+        // ---- маски методички (рис. 4.18) и их увеличение
+        void Mask(MaskKind mk, int w, int h, string expect)
+        {
+            var m = Masks.Make(mk, w, h);
+            int fw, fh; Masks.FixedSize(mk, out fw, out fh);
+            int cols = fw > 0 ? fw : w, rows = fh > 0 ? fh : h;
+            string got = Masks.ToText(m, rows, cols).Replace("\r\n", " / ");
+            Check(got == expect, $"mask {mk} {w}x{h}: {got}");
+            float[] pk2; int pr2, pc2; string e2;
+            Check(Masks.TryParse(Masks.ToText(m, rows, cols), out pk2, out pr2, out pc2, out e2) && pr2 == rows && pc2 == cols, $"mask {mk} parses back");
+        }
+        Mask(MaskKind.MovingAverage, 3, 3, "1 1 1 / 1 1 1 / 1 1 1");
+        Mask(MaskKind.MovingAverage, 3, 5, "1 1 1 / 1 1 1 / 1 1 1 / 1 1 1 / 1 1 1");
+        Mask(MaskKind.SmallDetails, 3, 3, "1 2 1 / 2 4 2 / 1 2 1");
+        Mask(MaskKind.SmallDetails, 5, 3, "1 4 6 4 1 / 2 8 12 8 2 / 1 4 6 4 1");
+        Mask(MaskKind.SmallDetails, 3, 7, "1 2 1 / 6 12 6 / 15 30 15 / 20 40 20 / 15 30 15 / 6 12 6 / 1 2 1");
+        Check(Masks.Sum(Masks.Make(MaskKind.SmallDetails, 7, 7)) == 4096, "small details 7x7 sum 64²");
+        Mask(MaskKind.Laplacian8, 3, 3, "-1 -1 -1 / -1 8 -1 / -1 -1 -1");
+        Check(Masks.ToText(Masks.Make(MaskKind.Laplacian8, 5, 5), 5, 5) == Masks.ImageJDefault, "laplacian 8 5x5 == ImageJ default");
+        Mask(MaskKind.Laplacian4, 7, 7, "0 -1 0 / -1 4 -1 / 0 -1 0");
+        Mask(MaskKind.DoubleDiff, 3, 3, "1 -2 1 / -2 4 -2 / 1 -2 1");
+        Mask(MaskKind.VerticalLines, 9, 5, "-1 2 -1 / -1 2 -1 / -1 2 -1 / -1 2 -1 / -1 2 -1");
+        Mask(MaskKind.HorizontalLines, 7, 9, "-1 -1 -1 -1 -1 -1 -1 / 2 2 2 2 2 2 2 / -1 -1 -1 -1 -1 -1 -1");
+        Mask(MaskKind.DiagonalLeft, 3, 3, "2 -1 -1 / -1 2 -1 / -1 -1 2");
+        Mask(MaskKind.DiagonalRight, 3, 3, "-1 -1 2 / -1 2 -1 / 2 -1 -1");
+        Mask(MaskKind.East, 3, 3, "-1 1 1 / -1 -2 1 / -1 1 1");
+        Mask(MaskKind.SouthEast, 3, 3, "-1 -1 1 / -1 -2 1 / 1 1 1");
+        foreach (MaskKind mk in Enum.GetValues(typeof(MaskKind)))
+            if (mk != MaskKind.MovingAverage && mk != MaskKind.SmallDetails)
+                Check(Masks.Sum(Masks.Make(mk, 5, 7)) == 0, $"mask {mk} sum 0");
+        Check(Throws(() => Masks.Make(MaskKind.MovingAverage, 4, 3)), "mask rejects even size");
 
         // ---- gaussian blur keeps mean of constant & reduces noise
         var gb = Filters.GaussianBlur(ImageOps.ConvertTo(noisy, PixelType.Gray32), 2);
