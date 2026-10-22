@@ -42,6 +42,13 @@ build.cmd           # Windows
 
 Результат: `src/bin/Release/net35/SigmaLab.exe` (+ `SigmaLab.exe.config`, он обязателен рядом с exe).
 
+Релиз собирает GitHub Actions (`.github/workflows/release.yml`): поднять `<Version>` в `src/SigmaLab.csproj`, закоммитить и
+отправить тег той же версии — установщик и портативный архив появятся в файлах релиза.
+
+```sh
+git tag -a v1.0.2 -m "Что нового" && git push origin main v1.0.2
+```
+
 ## Устройство
 
 ```
