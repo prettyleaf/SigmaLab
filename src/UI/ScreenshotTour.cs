@@ -167,8 +167,8 @@ namespace SigmaLab.UI
             };
             steps.Add(() => main.TourActivate("снимок_таблицы.bmp"));
             steps.Add(() => modal("convolve", "13_convolve_preview", f => check(f, "Предпросмотр"), false));
-            // выпадающие списки по порядку получают значения choices, затем доступные поля размера — w×h
-            Action<Form, int[], int, int> prepareSize = (f, choices, w, h) =>
+            // выпадающие списки по порядку получают значения choices, затем доступные поля размера — строки × столбцы
+            Action<Form, int[], int, int> prepareSize = (f, choices, rows, cols) =>
             {
                 var combos = new List<ComboBox>();
                 var boxes = new List<NumBox>();
@@ -187,12 +187,12 @@ namespace SigmaLab.UI
                 foreach (var nb in boxes)
                 {
                     if (!nb.Enabled) continue;
-                    if (nb.Caption == "Ширина") nb.Value = w;
-                    if (nb.Caption == "Высота") nb.Value = h;
+                    if (nb.Caption == "Строки") nb.Value = rows;
+                    if (nb.Caption == "Столбцы") nb.Value = cols;
                 }
             };
             int small = 1 + (int)MaskKind.SmallDetails;
-            steps.Add(() => modal("convolve", "13b_convolve_template", f => prepareSize(f, new[] { small, 1 }, 5, 3), false));
+            steps.Add(() => modal("convolve", "13b_convolve_template", f => prepareSize(f, new[] { small, 1 }, 3, 5), false));
             steps.Add(() => modal("convolve", "13d_convolve_own_weights", f => prepareSize(f, new[] { small, 2 }, 0, 0), false));
             steps.Add(() => modal("rank", "13c_rank_rect", f => { prepareSize(f, new[] { 1 }, 3, 5); check(f, "Предпросмотр"); }, false));
             steps.Add(() => modal("calc", "14_calculator", null, false));

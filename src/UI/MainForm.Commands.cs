@@ -483,7 +483,7 @@ namespace SigmaLab.UI
                     return;
                 }
                 info.ForeColor = Theme.Muted;
-                info.Text = "Маска " + c + "×" + r + " (ширина × высота), сумма коэффициентов " +
+                info.Text = "Маска " + r + "×" + c + " (строки × столбцы), сумма коэффициентов " +
                             Masks.Sum(k).ToString("0.####", System.Globalization.CultureInfo.CurrentCulture);
             };
             text.TextChanged += (s, e) => describe();
@@ -500,7 +500,7 @@ namespace SigmaLab.UI
                 if (kind() == null) return null;
                 double[] hz, vt; string err;
                 if (ownWeights()) return Masks.TryParseProfiles(ownText.Text, out hz, out vt, out err) ? null : "Свои веса: " + err;
-                return ParamDialog.IsOddSize(size) ? null : "Размер шаблона: ширина и высота — нечётные числа от 1 до " + Masks.MaxTemplateSize + ".";
+                return ParamDialog.IsOddSize(size) ? null : "Размер шаблона: число строк и столбцов — нечётное, от 1 до " + Masks.MaxTemplateSize + ".";
             };
             // текст маски по шаблону; вызывать, только если templateError() == null
             Func<string> build = () =>
@@ -511,7 +511,7 @@ namespace SigmaLab.UI
                     Masks.TryParseProfiles(ownText.Text, out hz, out vt, out err);
                     return Masks.ToText(Masks.Separable(hz, vt), vt.Length, hz.Length);
                 }
-                int w = size[0].IntValue, h = size[1].IntValue;
+                int h = size[0].IntValue, w = size[1].IntValue;
                 var profile = weights.SelectedIndex == 1 ? WeightProfile.Triangular : WeightProfile.Binomial;
                 return Masks.ToText(Masks.Make(kind().Value, w, h, profile), h, w);
             };
@@ -522,10 +522,10 @@ namespace SigmaLab.UI
                 double[] hz, vt; string err;
                 if (ownWeights() && Masks.TryParseProfiles(ownText.Text, out hz, out vt, out err)) { fw = hz.Length; fh = vt.Length; }
                 setting = true;
-                size[0].Enabled = kind() != null && fw == 0 && !ownWeights();
-                size[1].Enabled = kind() != null && fh == 0 && !ownWeights();
-                size[0].Value = fw > 0 ? fw : want[0];
-                size[1].Value = fh > 0 ? fh : want[1];
+                size[0].Enabled = kind() != null && fh == 0 && !ownWeights();
+                size[1].Enabled = kind() != null && fw == 0 && !ownWeights();
+                size[0].Value = fh > 0 ? fh : want[0];
+                size[1].Value = fw > 0 ? fw : want[1];
                 weights.Enabled = kind() == MaskKind.SmallDetails;
                 ownText.Enabled = ownWeights();
                 setting = false;
@@ -583,8 +583,8 @@ namespace SigmaLab.UI
             {
                 float[] k; int r, c; string err;
                 Masks.TryParse(text.Text, out k, out r, out c, out err);
-                if (text.Text != generated) return "свёртка " + c + "×" + r;
-                string what = Masks.KindName(kind().Value) + " " + c + "×" + r;
+                if (text.Text != generated) return "свёртка " + r + "×" + c;
+                string what = Masks.KindName(kind().Value) + " " + r + "×" + c;
                 if (kind() == MaskKind.SmallDetails && weights.SelectedIndex > 0)
                     what += weights.SelectedIndex == 1 ? " (треугольные веса)" : " (свои веса)";
                 return what;
@@ -593,7 +593,7 @@ namespace SigmaLab.UI
 
         private string _lastKernel = Masks.ImageJDefault;
         private int _maskTemplate;
-        private int[] _maskSize = { 3, 3 };
+        private int[] _maskSize = { 3, 3 }; // строки, столбцы
         private int _maskWeights;
         private string _maskOwnWeights = "1 2 1 ** 1 2 1";
 
@@ -611,7 +611,7 @@ namespace SigmaLab.UI
         {
             if (RequireImage() == null) return;
             var dlg = new ParamDialog(Filters.RankName(t), "Апертура фильтра — круг заданного радиуса (как Process › Filters в ImageJ) " +
-                                                           "или прямоугольник ширина × высота, например 3×5.");
+                                                           "или прямоугольник строки × столбцы, например 3×5 — 3 строки по 5 пикселей.");
             var shape = dlg.AddChoice("Апертура:", new object[] { "круг заданного радиуса", "прямоугольник" }, _rankRect ? 1 : 0);
             var r = dlg.AddNumber("Радиус:", 2, 1, 0.5, 100, "пикс.");
             var size = dlg.AddSize("Размер:", _rankSize[0], _rankSize[1], 1, 101);
@@ -631,7 +631,7 @@ namespace SigmaLab.UI
                     area.Text = "Апертура: " + size[0].IntValue + "×" + size[1].IntValue + " = " + size[0].IntValue * size[1].IntValue + " пикселей";
                 else
                 {
-                    area.Text = "Ширина и высота — нечётные числа (1, 3, 5…).";
+                    area.Text = "Число строк и столбцов — нечётное (1, 3, 5…).";
                     area.ForeColor = Color.Firebrick;
                 }
             };
@@ -640,7 +640,7 @@ namespace SigmaLab.UI
             size[0].TextChanged += (s, e) => upd();
             size[1].TextChanged += (s, e) => upd();
             upd();
-            dlg.Validator = () => rect() && !ParamDialog.IsOddSize(size) ? "Ширина и высота апертуры должны быть нечётными (1, 3, 5…)." : null;
+            dlg.Validator = () => rect() && !ParamDialog.IsOddSize(size) ? "Число строк и столбцов апертуры должно быть нечётным (1, 3, 5…)." : null;
             var toNew = dlg.AddCheck("Результат — в новое изображение", false);
             dlg.EnablePreview();
             dlg.FormClosed += (s, e) =>
@@ -650,12 +650,12 @@ namespace SigmaLab.UI
                 if (_rankRect) _rankSize = new[] { size[0].IntValue, size[1].IntValue };
             };
             RunFilterDialog(dlg, Filters.RankName(t),
-                d => rect() ? Filters.Rank(d, t, size[0].IntValue, size[1].IntValue) : Filters.Rank(d, t, r.Value), true, toNew,
+                d => rect() ? Filters.Rank(d, t, size[1].IntValue, size[0].IntValue) : Filters.Rank(d, t, r.Value), true, toNew,
                 () => Filters.RankName(t) + (rect() ? " " + size[0].IntValue + "×" + size[1].IntValue : " r=" + Ui.G(r.Value)));
         }
 
         private bool _rankRect;
-        private int[] _rankSize = { 3, 3 };
+        private int[] _rankSize = { 3, 3 }; // строки, столбцы
 
         // ================================================================== Анализ
 

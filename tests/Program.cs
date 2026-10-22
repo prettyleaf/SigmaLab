@@ -117,7 +117,7 @@ static class T
         Mask(MaskKind.SmallDetails, 5, 3, "1 4 6 4 1 / 2 8 12 8 2 / 1 4 6 4 1");
         Mask(MaskKind.SmallDetails, 3, 7, "1 2 1 / 6 12 6 / 15 30 15 / 20 40 20 / 15 30 15 / 6 12 6 / 1 2 1");
         Check(Masks.Sum(Masks.Make(MaskKind.SmallDetails, 7, 7)) == 4096, "small details 7x7 sum 64²");
-        Check(Masks.ToText(Masks.Make(MaskKind.SmallDetails, 5, 3, WeightProfile.Triangular), 3, 5) == "1 2 3 2 1\r\n2 4 6 4 2\r\n1 2 3 2 1", "small details triangular 5x3");
+        Check(Masks.ToText(Masks.Make(MaskKind.SmallDetails, 5, 3, WeightProfile.Triangular), 3, 5) == "1 2 3 2 1\r\n2 4 6 4 2\r\n1 2 3 2 1", "small details triangular 3x5 (rows x columns)");
         Check(string.Join(" ", Masks.Profile(WeightProfile.Triangular, 7)) == "1 2 3 4 3 2 1", "triangular profile 7");
         Check(string.Join(" ", Masks.Profile(WeightProfile.Binomial, 1)) == "1" && string.Join(" ", Masks.Profile(WeightProfile.Triangular, 1)) == "1", "profiles of 1");
         { double[] hz, vt; string pe;

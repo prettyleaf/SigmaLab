@@ -177,7 +177,7 @@ namespace SigmaLab.Core
             return Rank(src, type, CircleHalfWidths(radius, out kr));
         }
 
-        /// <summary>Ранговый фильтр с прямоугольной апертурой width×height (нечётные), например 3×5.</summary>
+        /// <summary>Ранговый фильтр с прямоугольной апертурой width×height (нечётные); апертура 3×5 методички (3 строки, 5 столбцов) — width = 5, height = 3.</summary>
         public static ImageData Rank(ImageData src, RankType type, int width, int height)
         {
             if (width < 1 || height < 1 || width % 2 == 0 || height % 2 == 0)

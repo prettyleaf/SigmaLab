@@ -173,22 +173,25 @@ namespace SigmaLab.UI
             return nb;
         }
 
-        /// <summary>Два целых поля в одной строке: [0] — ширина, [1] — высота.</summary>
-        public NumBox[] AddSize(string label, int width, int height, int min, int max)
+        /// <summary>
+        /// Два целых поля в одной строке, размер как в методичке — строки × столбцы (3×5 — 3 строки по 5 элементов):
+        /// [0] — строки (высота), [1] — столбцы (ширина).
+        /// </summary>
+        public NumBox[] AddSize(string label, int rows, int columns, int min, int max)
         {
             var p = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = Padding.Empty };
             var boxes = new NumBox[2];
-            string[] caps = { "Ширина", "Высота" };
+            string[] caps = { "Строки", "Столбцы" };
             for (int i = 0; i < 2; i++)
             {
                 var nb = new NumBox { Min = min, Max = max, Caption = caps[i], Width = Theme.S(50), Margin = Padding.Empty };
-                nb.Value = i == 0 ? width : height;
+                nb.Value = i == 0 ? rows : columns;
                 nb.TextChanged += (s, e) => Touch();
                 if (i == 1) p.Controls.Add(new Label { Text = "×", AutoSize = true, Margin = new Padding(Theme.S(4), Theme.S(4), Theme.S(4), 0) });
                 p.Controls.Add(nb);
                 boxes[i] = nb;
             }
-            p.Controls.Add(new Label { Text = "ширина × высота", AutoSize = true, ForeColor = Theme.Muted, Margin = new Padding(Theme.S(6), Theme.S(4), 0, 0) });
+            p.Controls.Add(new Label { Text = "строки × столбцы", AutoSize = true, ForeColor = Theme.Muted, Margin = new Padding(Theme.S(6), Theme.S(4), 0, 0) });
             AddRow(label, p);
             return boxes;
         }
