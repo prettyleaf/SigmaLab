@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>СигмаЛаб — руководство</title>
+<style>
+  body { font-family: "Segoe UI", Tahoma, Verdana, sans-serif; color: #2b2b33; background: #f6f6fa; margin: 0; line-height: 1.5; font-size: 15px; }
+  header { background: #3c388d; color: #fff; padding: 22px 32px 18px; }
+  header h1 { margin: 0; font-size: 28px; }
+  header p { margin: 4px 0 0; color: #e1e0ed; }
+  .dots { height: 6px; background: #9abf38; }
+  nav { background: #fff; border-bottom: 1px solid #c2c1db; padding: 10px 32px; }
+  nav a { color: #3c388d; margin-right: 16px; text-decoration: none; white-space: nowrap; }
+  nav a:hover { text-decoration: underline; }
+  main { max-width: 1000px; margin: 0 auto; padding: 10px 32px 60px; }
+  h2 { color: #3c388d; border-bottom: 2px solid #c2c1db; padding-bottom: 4px; margin-top: 36px; }
+  h3 { color: #2b286a; margin-bottom: 6px; }
+  .step { background: #fff; border: 1px solid #e1e0ed; border-left: 5px solid #3c388d; padding: 10px 16px; margin: 12px 0; }
+  .step h3 { margin-top: 2px; }
+  .menu { font-family: Consolas, monospace; background: #ececf4; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+  .note { background: #f1f7e3; border-left: 5px solid #9abf38; padding: 8px 14px; margin: 10px 0; }
+  .warn { background: #fff4e5; border-left: 5px solid #e0901e; padding: 8px 14px; margin: 10px 0; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid #c2c1db; padding: 4px 10px; }
+  th { background: #ececf4; }
+  table.mask td { width: 34px; text-align: center; font-family: Consolas, monospace; background: #fff; }
+  .masks { display: flex; flex-wrap: wrap; gap: 18px; }
+  .masks div { text-align: center; font-size: 13px; }
+  .f { font-family: "Cambria Math", Cambria, "Times New Roman", serif; font-size: 17px; background: #fff; border: 1px solid #e1e0ed; padding: 8px 14px; margin: 8px 0; }
+  kbd { font-family: Consolas, monospace; background: #fff; border: 1px solid #9e9cc6; border-radius: 3px; padding: 0 5px; }
+  footer { color: #6b6a80; font-size: 13px; text-align: center; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>СигмаЛаб</h1>
+  <p>Программа кафедры телевидения и управления ТУСУР — руководство пользователя</p>
+</header>
+<div class="dots"></div>
+<nav>
+  <a href="#about">О программе</a>
+  <a href="#ui">Интерфейс</a>
+  <a href="#map">Соответствие команд ImageJ и Imatest</a>
+  <a href="#process">Обработка</a>
+  <a href="#stepchart">Stepchart</a>
+  <a href="#snr">ОСШ и ПОСШ</a>
+  <a href="#files">Файлы</a>
+  <a href="#keys">Клавиши</a>
+  <a href="#license">Лицензия</a>
+</nav>
+<main>
+
+<h2 id="about">О программе</h2>
+<p><b>СигмаЛаб</b> — учебная программа кафедры телевидения и управления (ТУ) ТУСУР для лабораторной работы № 1
+«Измерение характеристик сигналов и шумов в телевизионном изображении» по дисциплинам «Измерительное телевидение»
+и «Телевизионные измерения». Она заменяет используемые в работе программы ImageJ и Imatest (модуль Stepchart)
+и дополнительно позволяет рассчитать ОСШ и ПОСШ.</p>
+<p>Работа выполняется <b>по методическим указаниям</b>: программа предоставляет инструменты, а все шаги — выбор
+областей, ввод масок и параметров, построение гистограмм, расчёты, заполнение таблиц и построение графиков —
+выполняет студент. Названия команд в меню продублированы на английском, как в ImageJ и Imatest, чтобы их было легко
+найти по тексту методички (см. <a href="#map">таблицу соответствия</a>).</p>
+<p>Авторы лабораторной работы: Каменский А.В. (доцент кафедры ТУ), Курячий М.И. (профессор кафедры ТУ).
+Разработчик программы: Колесников И.Д.</p>
+<p>Программа работает в Windows 7, 8.1, 10 и 11 и не требует установки дополнительных компонентов.</p>
+
+<h2 id="ui">Интерфейс</h2>
+<ul>
+  <li><b>Слева</b> — список открытых изображений (как окна в ImageJ). Щелчок делает изображение активным, правая кнопка — меню (переименовать, дублировать, сохранить, закрыть).</li>
+  <li><b>В центре</b> — активное изображение. Левая кнопка мыши — прямоугольное выделение (его можно двигать и тянуть за маркеры), колесо — масштаб, правая кнопка или пробел — перемещение.</li>
+  <li><b>Справа</b> — сведения о выделении (N, Mean, StdDev, Min, Max) и <b>менеджер областей</b> (ROI Manager): кнопка «Добавить» (<kbd>Ctrl</kbd>+<kbd>T</kbd>) запоминает выделение; щелчок по области в списке выделяет её на активном изображении — так одну и ту же область можно перенести на другое изображение. «Измерить» добавляет в таблицу результаты для всех областей списка.</li>
+  <li><b>Внизу</b> — таблица результатов измерений (Analyze › Measure); её можно скопировать в Word/Excel или сохранить в CSV.</li>
+</ul>
+<div class="note">Как в ImageJ: если на изображении есть выделение, математика, шум и фильтры применяются <b>только внутри выделения</b>. Чтобы обработать всё изображение, снимите выделение (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd>). Последнее действие можно отменить (<kbd>Ctrl</kbd>+<kbd>Z</kbd>).</div>
+
+<h2 id="map">Соответствие команд ImageJ и Imatest</h2>
+<table>
+<tr><th>Команда в методичке</th><th>Где в СигмаЛаб</th></tr>
+<tr><td>File › Open…</td><td><span class="menu">Файл › Открыть…</span></td></tr>
+<tr><td>File › New › Image…</td><td><span class="menu">Файл › Создать изображение…</span></td></tr>
+<tr><td>File › Save, File › Save As › Tiff</td><td><span class="menu">Файл › Сохранить / Сохранить как…</span></td></tr>
+<tr><td>Process › Image Calculator…</td><td><span class="menu">Обработка › Калькулятор изображений (Image Calculator)…</span></td></tr>
+<tr><td>Process › Math › Add / Subtract / Multiply / Divide…</td><td><span class="menu">Обработка › Математика (Math)</span></td></tr>
+<tr><td>Process › Noise › Add Specified Noise…</td><td><span class="menu">Обработка › Шум (Noise) › Добавить шум с заданным σ…</span></td></tr>
+<tr><td>Process › Filters › Convolve…</td><td><span class="menu">Обработка › Фильтры (Filters) › Свёртка (Convolve)…</span></td></tr>
+<tr><td>Process › Filters › Gaussian Blur / Median / Mean / Minimum / Maximum…</td><td><span class="menu">Обработка › Фильтры (Filters)</span></td></tr>
+<tr><td>Analyze › Histogram</td><td><span class="menu">Анализ › Гистограмма (Histogram)</span>, <kbd>Ctrl</kbd>+<kbd>H</kbd></td></tr>
+<tr><td>Analyze › Measure</td><td><span class="menu">Анализ › Измерить (Measure)</span>, <kbd>Ctrl</kbd>+<kbd>M</kbd></td></tr>
+<tr><td>ROI Manager (Analyze › Tools)</td><td>панель справа, <span class="menu">Анализ › Менеджер областей</span></td></tr>
+<tr><td>Imatest › Stepchart</td><td><span class="menu">Imatest › Stepchart…</span></td></tr>
+<tr><td>Imatest › Test Charts</td><td><span class="menu">Imatest › Генератор тестовых таблиц (Test Charts)…</span></td></tr>
+<tr><td>Media Player Classic: File › Save Image…</td><td><span class="menu">Файл › Импорт кадров из видео…</span> (или сохранить кадры в MPC и открыть их как изображения)</td></tr>
+</table>
+
+<h2 id="process">Обработка изображений</h2>
+<h3>Калькулятор изображений</h3>
+<p>Результат = Изображение 1 (операция) Изображение 2. Галочка «Создать новое изображение» (Create new window) открывает результат отдельно.
+Галочка «32-битный результат» (32-bit (float) result) выполняет операцию над вещественными числами; без неё результат для 8-битных
+изображений ограничивается диапазоном 0…255, как в ImageJ.</p>
+<h3>Свёртка (Convolve)</h3>
+<p>Коэффициенты маски вводятся через пробел, каждая строка маски — с новой строки; число строк и столбцов должно быть нечётным.
+«Нормировать» (Normalize Kernel) делит результат на сумму коэффициентов, если она не равна нулю. «Предпросмотр» показывает результат
+до применения. Для 8-битных изображений результат округляется и ограничивается диапазоном 0…255; края дополняются повторением
+крайних пикселей; ядро не переворачивается — всё как в ImageJ.</p>
+<h3>Фильтры</h3>
+<p>Median, Mean, Minimum, Maximum, Variance используют круглую апертуру заданного радиуса, как в ImageJ. У Gaussian Blur параметр —
+стандартное отклонение гауссианы (Sigma).</p>
+<h3>Шум</h3>
+<p>Add Specified Noise добавляет к каждому пикселю (для RGB — к каждому каналу независимо) нормально распределённую величину с
+нулевым средним и заданным стандартным отклонением. Для 8-битных изображений значения вне 0…255 разыгрываются заново, как в ImageJ.
+Есть также импульсный («соль и перец»), равномерный и мультипликативный шумы.</p>
+<h3>Гистограмма и измерения</h3>
+<p>Окно гистограммы показывает Count, Mean, StdDev, Min, Max, Mode. Для 8-битных изображений — 256 бинов 0…255, для 32-битных —
+256 бинов от минимума до максимума. StdDev рассчитывается с делителем n − 1. Яркость RGB-изображения — (R+G+B)/3, как в ImageJ по
+умолчанию (переключается в <span class="menu">Правка › Настройки</span>). Гистограмму можно сохранить как изображение или как список значений.</p>
+
+<h2 id="stepchart">Модуль Stepchart</h2>
+<p>Анализ шумов по ступенчатой тестовой таблице. Порядок работы: откройте изображение таблицы, выделите мышью область,
+охватывающую все градации и не выходящую за границы таблицы, задайте настройки и нажмите «Анализ (Yes, Continue)».
+Зелёные прямоугольники показывают участки зон, по которым ведётся измерение. Настройки сохраняются до следующего запуска модуля;
+при повторном запуске для изображения того же размера программа предлагает использовать прежнюю область (ROI).</p>
+<table>
+<tr><th>Настройка</th><th>Назначение</th></tr>
+<tr><td>Chart type</td><td>Тип таблицы: шаг оптической плотности между зонами и плотность первой (самой светлой) зоны.</td></tr>
+<tr><td>Число зон</td><td>Число градаций таблицы; 0 — определить по перепадам яркости.</td></tr>
+<tr><td>Zone detection</td><td>Automatic — границы зон уточняются по перепадам яркости; Manual — область делится на равные части.</td></tr>
+<tr><td>Доля зоны</td><td>Центральная часть каждой зоны, по которой ведётся измерение (края зон не учитываются).</td></tr>
+<tr><td>Неравномерность освещения</td><td>Перед расчётом шума из зоны вычитается плоскость или поверхность второго порядка.</td></tr>
+<tr><td>Saturation level, Pixel offset</td><td>Максимальный уровень пикселя и смещение уровня чёрного.</td></tr>
+<tr><td>Results (Fig. 1), Lower plot</td><td>Единицы шума на нижнем графике рисунка 1.</td></tr>
+<tr><td>Results (Fig. 2), Middle plot</td><td>Шум в f-stop или ОСШ = 1/(шум в f-stop).</td></tr>
+<tr><td>Results (Fig. 2), Lower plot</td><td>Шум в % от 255, в уровнях, или Pixel SNR.</td></tr>
+<tr><td>Plot</td><td>Какие рисунки построить: 1 — Pixels, noise; 2 — Density, noise detail; 3 — Density, all channels + White Balance.</td></tr>
+</table>
+<p>Рисунки сохраняются кнопкой «Сохранить рисунок (TIFF)…» в формате TIFF без сжатия (также PNG, BMP, JPEG). Таблицу значений по
+зонам можно сохранить в CSV.</p>
+<h3>Обозначения на рисунках</h3>
+<ul>
+  <li><b>Density response</b> — lg(уровень/255) от логарифма экспозиции (−оптическая плотность зоны); наклон — гамма.</li>
+  <li><b>Шум в f-stop</b> — СКО шума зоны, пересчитанное в ступени экспозиции через наклон характеристики; 1 f-stop = 0,301 единицы плотности. Линии 1; 0,5; 0,25; 0,1 f-stop — пороги качества Low, Medium, M-High, High; по ним определяется динамический диапазон.</li>
+  <li><b>Noise (%) normalized to image density range = 1.5</b> — шум в процентах от разности уровней зон с плотностями 0,1 и 1,6.</li>
+  <li><b>Pixel SNR (dB)</b> = 20·lg(S/N), где S — средний уровень зоны, N — СКО шума зоны.</li>
+  <li><b>Noise spectrum</b> — спектр шума яркости по средним зонам (частота в циклах на пиксель).</li>
+  <li><b>White balance</b> — отклонение цвета зон от нейтрального серого в CIELAB (a*, b*, ΔC*ab).</li>
+</ul>
+
+<h2 id="snr">ОСШ и ПОСШ</h2>
+<p><span class="menu">Анализ › Расчёт ОСШ и ПОСШ…</span></p>
+<h3>Калькулятор ОСШ по M и σ</h3>
+<p>Введите среднее значение яркости M и стандартное отклонение σ (например, Mean и StdDev из гистограммы области) —
+программа рассчитает ОСШ в разах и в децибелах:</p>
+<div class="f">ОСШ = M / σ,&nbsp;&nbsp;&nbsp; ОСШ<sub>дБ</sub> = 20·lg(M / σ)</div>
+<h3>ОСШ и ПОСШ относительно эталона</h3>
+<p>Выберите эталон (изображение без шума) и сравниваемое изображение того же размера. Рассчитываются (x — эталон,
+x̂ — сравниваемое изображение, N — число пикселей, MAX = 255 для 8 бит):</p>
+<div class="f">MSE = (1/N)·Σ(x̂ − x)²,&nbsp;&nbsp; ПОСШ = 10·lg(MAX² / MSE),&nbsp;&nbsp; ОСШ = 10·lg(Σx² / Σ(x̂ − x)²)</div>
+<p>а также RMSE, средняя и максимальная ошибка и индекс структурного сходства SSIM. «Изображение ошибки» открывает разность
+«сравниваемое − эталон» как 32-битное изображение.</p>
+
+<h2 id="files">Файлы и видео</h2>
+<ul>
+  <li>Открываются TIFF, PNG, JPEG, BMP, GIF. Сохранение — TIFF без сжатия, PNG, BMP, JPEG. 32-битные изображения без потерь сохраняются только в TIFF.</li>
+  <li><span class="menu">Файл › Импорт кадров из видео…</span>: задаются номер первого кадра, число кадров и шаг. AVI читается средствами Windows; для MPEG, MP4 и других форматов нужен ffmpeg.exe в папке программы (или путь к нему в <span class="menu">Правка › Настройки</span>).</li>
+  <li><span class="menu">Файл › Печать…</span> — печать активного изображения (например, тестовой таблицы).</li>
+</ul>
+
+<h2 id="keys">Горячие клавиши</h2>
+<table>
+<tr><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Открыть</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Сохранить</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>Создать изображение</td><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Отменить</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>H</kbd></td><td>Гистограмма</td><td><kbd>Ctrl</kbd>+<kbd>M</kbd></td><td>Измерить</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd></td><td>Профиль</td><td><kbd>Ctrl</kbd>+<kbd>T</kbd></td><td>Добавить выделение в менеджер областей</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Выделить всё</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd></td><td>Снять выделение</td></tr>
+<tr><td><kbd>+</kbd> / <kbd>−</kbd></td><td>Масштаб</td><td><kbd>Ctrl</kbd>+<kbd>0</kbd></td><td>Вписать в окно</td></tr>
+<tr><td>Стрелки</td><td>Сдвиг выделения (с <kbd>Shift</kbd> — на 10 пикс.)</td><td><kbd>Alt</kbd>+стрелки</td><td>Размер выделения</td></tr>
+<tr><td><kbd>F1</kbd></td><td>Это руководство</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></td><td>Расчёт ОСШ и ПОСШ</td></tr>
+</table>
+
+<h2 id="license">Лицензия</h2>
+<p>© 2026 ТУСУР, кафедра телевидения и управления. Программа является учебным программным обеспечением кафедры ТУ и
+распространяется на условиях учебной лицензии: её можно устанавливать и использовать в ТУСУР и на личных компьютерах
+обучающихся и сотрудников ТУСУР в учебных целях; распространение за пределами ТУСУР, коммерческое использование и
+изменение — только с письменного согласия кафедры ТУ. Полный текст — <span class="menu">Справка › Лицензионное соглашение</span>.</p>
+<p>ImageJ — программа NIH (общественное достояние), Imatest — товарный знак Imatest LLC. СигмаЛаб не является продуктом
+этих правообладателей и не содержит их программного кода.</p>
+</main>
+<footer>СигмаЛаб · Программа кафедры телевидения и управления ТУСУР · Лабораторная работа: Каменский А.В., Курячий М.И. · Разработчик: Колесников И.Д.</footer>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- .NET Framework 3.5: есть в Windows 7 «из коробки»; на Windows 10/11 программа запускается на .NET 4.x (см. App.config) -->
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>SigmaLab</AssemblyName>
+    <RootNamespace>SigmaLab</RootNamespace>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>СигмаЛаб (SigmaLab)</Product>
+    <AssemblyTitle>СигмаЛаб — измерение сигналов и шумов в ТВ-изображении</AssemblyTitle>
+    <Description>Учебная программа кафедры телевидения и управления ТУСУР: обработка и анализ изображений, модуль Stepchart, расчёт ОСШ и ПОСШ.</Description>
+    <Company>ТУСУР, кафедра телевидения и управления (ТУ)</Company>
+    <Authors>Колесников И.Д.</Authors>
+    <Copyright>© 2026 ТУСУР, кафедра телевидения и управления. Разработчик: Колесников И.Д.</Copyright>
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <EmbeddedResource Include="Resources\app.ico" LogicalName="SigmaLab.app.ico" />
+    <EmbeddedResource Include="Resources\help.html" LogicalName="SigmaLab.help.html" />
+    <EmbeddedResource Include="Resources\license.txt" LogicalName="SigmaLab.license.txt" />
+  </ItemGroup>
+</Project>
