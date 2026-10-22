@@ -467,6 +467,8 @@ namespace SigmaLab.UI
             for (int i = 0; i < kinds.Length; i++) names[i + 1] = Masks.KindName(kinds[i]);
             var tpl = dlg.AddChoice("Шаблон:", names, _maskTemplate, 300);
             var size = dlg.AddSize("Размер шаблона:", _maskSize[0], _maskSize[1], 1, Masks.MaxTemplateSize);
+            var weights = dlg.AddChoice("Веса:", new object[] { "биномиальные (1 4 6 4 1)", "треугольные (1 2 3 2 1)", "свои: строка ** столбец" }, _maskWeights, 300);
+            var ownText = dlg.AddText("Свои веса:", _maskOwnWeights, 1, 300);
             var text = dlg.AddText("Маска:", _lastKernel, 9, 360);
             var info = dlg.AddNote("");
             var norm = dlg.AddCheck("Нормировать (Normalize Kernel)", true);
@@ -487,39 +489,65 @@ namespace SigmaLab.UI
             text.TextChanged += (s, e) => describe();
             describe();
 
-            // размер, выбранный пользователем; у шаблонов фиксированного размера в полях показывается их размер
+            // размер, выбранный пользователем; у шаблонов фиксированного размера и при своих весах в полях показывается их размер
             int[] want = { _maskSize[0], _maskSize[1] };
             string generated = null;
             bool setting = false;
-            Func<string> sizeError = () => tpl.SelectedIndex > 0 && !ParamDialog.IsOddSize(size)
-                ? "Размер шаблона: ширина и высота — нечётные числа от 1 до " + Masks.MaxTemplateSize + "." : null;
+            Func<MaskKind?> kind = () => tpl.SelectedIndex > 0 ? kinds[tpl.SelectedIndex - 1] : (MaskKind?)null;
+            Func<bool> ownWeights = () => kind() == MaskKind.SmallDetails && weights.SelectedIndex == 2;
+            Func<string> templateError = () =>
+            {
+                if (kind() == null) return null;
+                double[] hz, vt; string err;
+                if (ownWeights()) return Masks.TryParseProfiles(ownText.Text, out hz, out vt, out err) ? null : "Свои веса: " + err;
+                return ParamDialog.IsOddSize(size) ? null : "Размер шаблона: ширина и высота — нечётные числа от 1 до " + Masks.MaxTemplateSize + ".";
+            };
+            // текст маски по шаблону; вызывать, только если templateError() == null
+            Func<string> build = () =>
+            {
+                if (ownWeights())
+                {
+                    double[] hz, vt; string err;
+                    Masks.TryParseProfiles(ownText.Text, out hz, out vt, out err);
+                    return Masks.ToText(Masks.Separable(hz, vt), vt.Length, hz.Length);
+                }
+                int w = size[0].IntValue, h = size[1].IntValue;
+                var profile = weights.SelectedIndex == 1 ? WeightProfile.Triangular : WeightProfile.Binomial;
+                return Masks.ToText(Masks.Make(kind().Value, w, h, profile), h, w);
+            };
             Action showSize = () =>
             {
                 int fw = 0, fh = 0;
-                if (tpl.SelectedIndex > 0) Masks.FixedSize(kinds[tpl.SelectedIndex - 1], out fw, out fh);
+                if (kind() != null) Masks.FixedSize(kind().Value, out fw, out fh);
+                double[] hz, vt; string err;
+                if (ownWeights() && Masks.TryParseProfiles(ownText.Text, out hz, out vt, out err)) { fw = hz.Length; fh = vt.Length; }
                 setting = true;
-                size[0].Enabled = tpl.SelectedIndex > 0 && fw == 0;
-                size[1].Enabled = tpl.SelectedIndex > 0 && fh == 0;
+                size[0].Enabled = kind() != null && fw == 0 && !ownWeights();
+                size[1].Enabled = kind() != null && fh == 0 && !ownWeights();
                 size[0].Value = fw > 0 ? fw : want[0];
                 size[1].Value = fh > 0 ? fh : want[1];
+                weights.Enabled = kind() == MaskKind.SmallDetails;
+                ownText.Enabled = ownWeights();
                 setting = false;
             };
             Action generate = () =>
             {
-                if (tpl.SelectedIndex <= 0) return;
-                string err = sizeError();
+                if (kind() == null) return;
+                string err = templateError();
                 if (err != null) { info.Text = err; info.ForeColor = Color.Firebrick; return; }
-                int w = size[0].IntValue, h = size[1].IntValue;
-                generated = Masks.ToText(Masks.Make(kinds[tpl.SelectedIndex - 1], w, h), h, w);
+                generated = build();
                 text.Text = generated;
             };
             showSize();
-            if (tpl.SelectedIndex > 0 && sizeError() == null)
-            {
-                string t = Masks.ToText(Masks.Make(kinds[tpl.SelectedIndex - 1], size[0].IntValue, size[1].IntValue), size[1].IntValue, size[0].IntValue);
-                if (t == text.Text) generated = t;
-            }
+            if (kind() != null && templateError() == null && build() == text.Text) generated = text.Text;
             tpl.SelectedIndexChanged += (s, e) => { showSize(); generate(); };
+            weights.SelectedIndexChanged += (s, e) => { showSize(); generate(); };
+            ownText.TextChanged += (s, e) =>
+            {
+                if (setting || !ownText.Enabled) return;
+                showSize();
+                generate();
+            };
             for (int i = 0; i < 2; i++)
             {
                 int j = i;
@@ -533,7 +561,7 @@ namespace SigmaLab.UI
             dlg.Validator = () =>
             {
                 float[] k; int r, c; string err;
-                return sizeError() ?? (Masks.TryParse(text.Text, out k, out r, out c, out err) ? null : err);
+                return templateError() ?? (Masks.TryParse(text.Text, out k, out r, out c, out err) ? null : err);
             };
             dlg.EnablePreview();
             Func<ImageData, ImageData> f = d =>
@@ -548,19 +576,26 @@ namespace SigmaLab.UI
                 _lastKernel = text.Text;
                 _maskTemplate = tpl.SelectedIndex;
                 _maskSize = want;
+                _maskWeights = weights.SelectedIndex;
+                _maskOwnWeights = ownText.Text;
             };
             RunFilterDialog(dlg, "Свёртка", f, true, toNew, () =>
             {
                 float[] k; int r, c; string err;
                 Masks.TryParse(text.Text, out k, out r, out c, out err);
-                string what = text.Text == generated ? Masks.KindName(kinds[tpl.SelectedIndex - 1]) : "свёртка";
-                return what + " " + c + "×" + r;
+                if (text.Text != generated) return "свёртка " + c + "×" + r;
+                string what = Masks.KindName(kind().Value) + " " + c + "×" + r;
+                if (kind() == MaskKind.SmallDetails && weights.SelectedIndex > 0)
+                    what += weights.SelectedIndex == 1 ? " (треугольные веса)" : " (свои веса)";
+                return what;
             });
         }
 
         private string _lastKernel = Masks.ImageJDefault;
         private int _maskTemplate;
         private int[] _maskSize = { 3, 3 };
+        private int _maskWeights;
+        private string _maskOwnWeights = "1 2 1 ** 1 2 1";
 
         private void GaussianDialog()
         {

@@ -12,6 +12,9 @@ namespace SigmaLab.Core
         VerticalLines, HorizontalLines, DiagonalLeft, DiagonalRight, East, SouthEast
     }
 
+    /// <summary>Как увеличивать маску малоразмерных деталей: веса строки и столбца.</summary>
+    public enum WeightProfile { Binomial, Triangular }
+
     /// <summary>Ядро свёртки, введённое пользователем (как в окне Convolver программы ImageJ).</summary>
     public static class Masks
     {
@@ -56,10 +59,10 @@ namespace SigmaLab.Core
 
         /// <summary>
         /// Шаблон маски width×height (построчно). Скользящее среднее — все единицы; малоразмерные детали —
-        /// биномиальная [1 2 1]**[1 2 1]ᵀ, на большие размеры — строками треугольника Паскаля (1 4 6 4 1, …);
+        /// [1 2 1]**[1 2 1]ᵀ, на большие размеры — с весами profile (биномиальными 1 4 6 4 1 или треугольными 1 2 3 2 1);
         /// лапласиан для восьми соседей — все −1, в центре их число; линии удлиняются вдоль направления линии.
         /// </summary>
-        public static float[] Make(MaskKind kind, int width, int height)
+        public static float[] Make(MaskKind kind, int width, int height, WeightProfile profile = WeightProfile.Binomial)
         {
             int fw, fh;
             FixedSize(kind, out fw, out fh);
@@ -74,10 +77,7 @@ namespace SigmaLab.Core
                     for (int i = 0; i < k.Length; i++) k[i] = 1;
                     break;
                 case MaskKind.SmallDetails:
-                    double[] bx = Binomial(width), by = Binomial(height);
-                    for (int y = 0; y < height; y++)
-                        for (int x = 0; x < width; x++) k[y * width + x] = (float)(by[y] * bx[x]);
-                    break;
+                    return Separable(Profile(profile, width), Profile(profile, height));
                 case MaskKind.Laplacian8:
                     for (int i = 0; i < k.Length; i++) k[i] = -1;
                     k[k.Length / 2] = k.Length - 1;
@@ -109,13 +109,57 @@ namespace SigmaLab.Core
             throw new ArgumentException("Нет маски 3×3 для " + kind);
         }
 
-        /// <summary>Биномиальные коэффициенты C(n−1, i): 1; 1 2 1; 1 4 6 4 1; …</summary>
-        private static double[] Binomial(int n)
+        /// <summary>
+        /// Веса длины n: биномиальные C(n−1, i) — 1 2 1; 1 4 6 4 1; 1 6 15 20 15 6 1 —
+        /// или треугольные — 1 2 1; 1 2 3 2 1; 1 2 3 4 3 2 1.
+        /// </summary>
+        public static double[] Profile(WeightProfile p, int n)
         {
             var c = new double[n];
             c[0] = 1;
-            for (int i = 1; i < n; i++) c[i] = c[i - 1] * (n - i) / i;
+            for (int i = 1; i < n; i++)
+                c[i] = p == WeightProfile.Triangular ? Math.Min(i, n - 1 - i) + 1 : c[i - 1] * (n - i) / i;
             return c;
+        }
+
+        /// <summary>Разделимая маска «строка ** столбец»: k[y, x] = vertical[y] · horizontal[x].</summary>
+        public static float[] Separable(double[] horizontal, double[] vertical)
+        {
+            var k = new float[horizontal.Length * vertical.Length];
+            for (int y = 0; y < vertical.Length; y++)
+                for (int x = 0; x < horizontal.Length; x++) k[y * horizontal.Length + x] = (float)(vertical[y] * horizontal[x]);
+            return k;
+        }
+
+        /// <summary>
+        /// Свои веса маски малоразмерных деталей: «1 2 3 2 1 ** 1 2 1» — строка (по горизонтали) ** столбец (по вертикали),
+        /// как в методичке; без «**» веса одинаковы по горизонтали и вертикали. Число весов — нечётное.
+        /// </summary>
+        public static bool TryParseProfiles(string text, out double[] horizontal, out double[] vertical, out string error)
+        {
+            horizontal = vertical = null;
+            string[] parts = (text ?? "").Split(new[] { "**" }, StringSplitOptions.None);
+            if (parts.Length > 2) { error = "Знак «**» должен встречаться не больше одного раза."; return false; }
+            string[] what = { "строки", "столбца" };
+            var res = new double[parts.Length][];
+            for (int p = 0; p < parts.Length; p++)
+            {
+                var nums = parts[p].Split(new[] { ' ', '\t', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                string name = parts.Length == 1 ? "" : " " + what[p];
+                if (nums.Length == 0) { error = "Не заданы веса" + name + "."; return false; }
+                if (nums.Length % 2 == 0 || nums.Length > MaxTemplateSize)
+                {
+                    error = "Число весов" + name + " должно быть нечётным, от 1 до " + MaxTemplateSize + ".";
+                    return false;
+                }
+                res[p] = new double[nums.Length];
+                for (int i = 0; i < nums.Length; i++)
+                    if (!NumParse.TryParse(nums[i], out res[p][i])) { error = "Не удалось прочитать число «" + nums[i] + "»."; return false; }
+            }
+            horizontal = res[0];
+            vertical = res[res.Length - 1];
+            error = null;
+            return true;
         }
 
         public static float Sum(float[] k)

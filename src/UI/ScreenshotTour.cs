@@ -167,21 +167,34 @@ namespace SigmaLab.UI
             };
             steps.Add(() => main.TourActivate("снимок_таблицы.bmp"));
             steps.Add(() => modal("convolve", "13_convolve_preview", f => check(f, "Предпросмотр"), false));
-            Action<Control, int, int, int> prepareSize = null;
-            prepareSize = (c, choice, w, h) =>
+            // выпадающие списки по порядку получают значения choices, затем доступные поля размера — w×h
+            Action<Form, int[], int, int> prepareSize = (f, choices, w, h) =>
             {
-                foreach (Control cc in c.Controls)
+                var combos = new List<ComboBox>();
+                var boxes = new List<NumBox>();
+                Action<Control> walk = null;
+                walk = c =>
                 {
-                    var cb = cc as ComboBox;
-                    if (cb != null) cb.SelectedIndex = choice;
-                    var nb = cc as NumBox;
-                    if (nb != null && nb.Caption == "Ширина") nb.Value = w;
-                    if (nb != null && nb.Caption == "Высота") nb.Value = h;
-                    prepareSize(cc, choice, w, h);
+                    foreach (Control cc in c.Controls)
+                    {
+                        if (cc is ComboBox) combos.Add((ComboBox)cc);
+                        if (cc is NumBox) boxes.Add((NumBox)cc);
+                        walk(cc);
+                    }
+                };
+                walk(f);
+                for (int i = 0; i < choices.Length && i < combos.Count; i++) combos[i].SelectedIndex = choices[i];
+                foreach (var nb in boxes)
+                {
+                    if (!nb.Enabled) continue;
+                    if (nb.Caption == "Ширина") nb.Value = w;
+                    if (nb.Caption == "Высота") nb.Value = h;
                 }
             };
-            steps.Add(() => modal("convolve", "13b_convolve_template", f => prepareSize(f, 1 + (int)MaskKind.SmallDetails, 5, 3), false));
-            steps.Add(() => modal("rank", "13c_rank_rect", f => { prepareSize(f, 1, 3, 5); check(f, "Предпросмотр"); }, false));
+            int small = 1 + (int)MaskKind.SmallDetails;
+            steps.Add(() => modal("convolve", "13b_convolve_template", f => prepareSize(f, new[] { small, 1 }, 5, 3), false));
+            steps.Add(() => modal("convolve", "13d_convolve_own_weights", f => prepareSize(f, new[] { small, 2 }, 0, 0), false));
+            steps.Add(() => modal("rank", "13c_rank_rect", f => { prepareSize(f, new[] { 1 }, 3, 5); check(f, "Предпросмотр"); }, false));
             steps.Add(() => modal("calc", "14_calculator", null, false));
             steps.Add(() => modal("chart", "15_chart_generator", null, true));
             steps.Add(() => shot(main, "16_main_after_chart"));

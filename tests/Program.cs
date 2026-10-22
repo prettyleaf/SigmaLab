@@ -117,6 +117,19 @@ static class T
         Mask(MaskKind.SmallDetails, 5, 3, "1 4 6 4 1 / 2 8 12 8 2 / 1 4 6 4 1");
         Mask(MaskKind.SmallDetails, 3, 7, "1 2 1 / 6 12 6 / 15 30 15 / 20 40 20 / 15 30 15 / 6 12 6 / 1 2 1");
         Check(Masks.Sum(Masks.Make(MaskKind.SmallDetails, 7, 7)) == 4096, "small details 7x7 sum 64²");
+        Check(Masks.ToText(Masks.Make(MaskKind.SmallDetails, 5, 3, WeightProfile.Triangular), 3, 5) == "1 2 3 2 1\r\n2 4 6 4 2\r\n1 2 3 2 1", "small details triangular 5x3");
+        Check(string.Join(" ", Masks.Profile(WeightProfile.Triangular, 7)) == "1 2 3 4 3 2 1", "triangular profile 7");
+        Check(string.Join(" ", Masks.Profile(WeightProfile.Binomial, 1)) == "1" && string.Join(" ", Masks.Profile(WeightProfile.Triangular, 1)) == "1", "profiles of 1");
+        { double[] hz, vt; string pe;
+          Check(Masks.TryParseProfiles("1 3 5 3 1 ** 1 2 1", out hz, out vt, out pe) && hz.Length == 5 && vt.Length == 3 && hz[2] == 5,
+                "own weights row ** column");
+          Check(Masks.ToText(Masks.Separable(hz, vt), 3, 5) == "1 3 5 3 1\r\n2 6 10 6 2\r\n1 3 5 3 1", "own weights mask");
+          Check(Masks.TryParseProfiles(" 1 2 1 ", out hz, out vt, out pe) && hz.Length == 3 && vt.Length == 3, "own weights same both ways");
+          Check(Masks.TryParseProfiles("0,5 1 0,5", out hz, out vt, out pe) && hz[0] == 0.5, "own weights comma decimals");
+          Check(!Masks.TryParseProfiles("1 2 ** 1 2 1", out hz, out vt, out pe), "own weights reject even");
+          Check(!Masks.TryParseProfiles("1 2 1 **", out hz, out vt, out pe), "own weights reject empty column");
+          Check(!Masks.TryParseProfiles("1 x 1", out hz, out vt, out pe), "own weights reject text");
+          Check(!Masks.TryParseProfiles("1 ** 1 ** 1", out hz, out vt, out pe), "own weights reject two **"); }
         Mask(MaskKind.Laplacian8, 3, 3, "-1 -1 -1 / -1 8 -1 / -1 -1 -1");
         Check(Masks.ToText(Masks.Make(MaskKind.Laplacian8, 5, 5), 5, 5) == Masks.ImageJDefault, "laplacian 8 5x5 == ImageJ default");
         Mask(MaskKind.Laplacian4, 7, 7, "0 -1 0 / -1 4 -1 / 0 -1 0");
