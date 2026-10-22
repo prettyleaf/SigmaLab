@@ -1,5 +1,5 @@
-# Сборка релиза СигмаЛаб: тесты ядра → SigmaLab.exe → портативный архив и установщик → файлы релиза на GitHub.
-# Выпуск версии: поднять <Version> в src/SigmaLab.csproj, затем
+# Сборка релиза ВидеоМетра: тесты ядра → VideoMeter.exe → портативный архив и установщик → файлы релиза на GitHub.
+# Выпуск версии: поднять <Version> в src/VideoMeter.csproj, затем
 #   git tag -a v1.0.2 -m "Что нового" && git push origin v1.0.2
 # Тег должен совпадать с <Version>; текст аннотации тега становится описанием релиза.
 # Ручной запуск (Actions › Release › Run workflow) только собирает файлы — они в артефактах запуска.
@@ -34,26 +34,26 @@ jobs:
         id: ver
         shell: pwsh
         run: |
-          $v = (Select-String -Path src/SigmaLab.csproj -Pattern '<Version>(.+)</Version>').Matches[0].Groups[1].Value
+          $v = (Select-String -Path src/VideoMeter.csproj -Pattern '<Version>(.+)</Version>').Matches[0].Groups[1].Value
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$v") {
-            throw "Тег $env:GITHUB_REF_NAME не совпадает с версией $v в src/SigmaLab.csproj"
+            throw "Тег $env:GITHUB_REF_NAME не совпадает с версией $v в src/VideoMeter.csproj"
           }
           "version=$v" >> $env:GITHUB_OUTPUT
 
       - name: Тесты ядра
         run: dotnet run --project tests/CoreTests.csproj -c Release
 
-      - name: Сборка SigmaLab.exe
-        run: dotnet build src/SigmaLab.csproj -c Release -nologo -v q
+      - name: Сборка VideoMeter.exe
+        run: dotnet build src/VideoMeter.csproj -c Release -nologo -v q
 
       - name: Портативная версия
         shell: python
         run: |
           import os, shutil, zipfile
-          name = "SigmaLab-${{ steps.ver.outputs.version }}-portable"
+          name = "VideoMeter-${{ steps.ver.outputs.version }}-portable"
           port = os.path.join("dist", name)
           os.makedirs(port)
-          for f in ("SigmaLab.exe", "SigmaLab.exe.config"):
+          for f in ("VideoMeter.exe", "VideoMeter.exe.config"):
               shutil.copy(os.path.join("src", "bin", "Release", "net35", f), port)
           shutil.copy(os.path.join("installer", "ПРОЧТИ.txt"), port)
           shutil.copy(os.path.join("src", "Resources", "license.txt"), os.path.join(port, "ЛИЦЕНЗИЯ.txt"))
@@ -71,11 +71,11 @@ jobs:
           $iscc = Find-Iscc
           if (-not $iscc) { choco install innosetup -y --no-progress | Out-Null; $iscc = Find-Iscc }
           if (-not $iscc) { throw "Не найден Inno Setup" }
-          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" "/O$env:GITHUB_WORKSPACE\dist" installer\SigmaLab.iss
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" "/O$env:GITHUB_WORKSPACE\dist" installer\VideoMeter.iss
 
       - uses: actions/upload-artifact@v7
         with:
-          name: SigmaLab-${{ steps.ver.outputs.version }}
+          name: VideoMeter-${{ steps.ver.outputs.version }}
           path: |
             dist/*.exe
             dist/*.zip
@@ -88,9 +88,9 @@ jobs:
         run: |
           $tag = $env:GITHUB_REF_NAME
           $v = '${{ steps.ver.outputs.version }}'
-          $files = "dist/SigmaLab-$v-setup.exe", "dist/SigmaLab-$v-portable.zip"
+          $files = "dist/VideoMeter-$v-setup.exe", "dist/VideoMeter-$v-portable.zip"
           # checkout получает тег без аннотации — забираем его целиком, чтобы взять из него описание релиза
           git fetch --force origin "refs/tags/${tag}:refs/tags/${tag}"
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) { gh release upload $tag $files --clobber }
-          else { gh release create $tag $files --title "СигмаЛаб $v" --notes-from-tag }
+          else { gh release create $tag $files --title "ВидеоМетр $v" --notes-from-tag }

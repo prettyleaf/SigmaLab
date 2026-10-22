@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     public enum MathOp
     {

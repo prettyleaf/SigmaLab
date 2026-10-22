@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     /// <summary>Режим сравнения каналов при расчёте ОСШ/ПОСШ.</summary>
     public enum CompareChannel { Luma = -1, R = 0, G = 1, B = 2, AllRgb = 3 }

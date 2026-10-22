@@ -4,9 +4,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
-using SigmaLab.Core;
+using VideoMeter.Core;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     /// <summary>
     /// Служебный режим «--shots папка»: программа сама проходит основные шаги работы на синтетических данных
@@ -249,7 +249,7 @@ namespace SigmaLab.UI
                 main.TourCommand("undo");
                 log("undo restores: " + ReferenceEquals(main.Workspace.Active.Data, before));
                 // видео
-                string avi = Environment.GetEnvironmentVariable("SIGMALAB_TEST_AVI");
+                string avi = Environment.GetEnvironmentVariable("VIDEOMETER_TEST_AVI");
                 if (!string.IsNullOrEmpty(avi))
                 {
                     try

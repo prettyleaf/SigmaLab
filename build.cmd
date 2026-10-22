@@ -1,9 +1,9 @@
 @echo off
-rem Сборка СигмаЛаб на Windows: нужен .NET SDK 8+ и (для установщика) Inno Setup 6.
+rem Сборка ВидеоМетра на Windows: нужен .NET SDK 8+ и (для установщика) Inno Setup 6.
 chcp 65001 >nul
 cd /d "%~dp0"
 dotnet run --project tests\CoreTests.csproj -c Release || exit /b 1
-dotnet build src\SigmaLab.csproj -c Release -nologo -v q || exit /b 1
+dotnet build src\VideoMeter.csproj -c Release -nologo -v q || exit /b 1
 set ISCC="%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
 if not exist %ISCC% set ISCC="%ProgramFiles%\Inno Setup 6\ISCC.exe"
-if exist %ISCC% (%ISCC% installer\SigmaLab.iss) else (echo Inno Setup 6 не найден: собран только src\bin\Release\net35\SigmaLab.exe)
+if exist %ISCC% (%ISCC% installer\VideoMeter.iss) else (echo Inno Setup 6 не найден: собран только src\bin\Release\net35\VideoMeter.exe)

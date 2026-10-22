@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using SigmaLab.Core;
+using VideoMeter.Core;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     public sealed partial class MainForm
     {

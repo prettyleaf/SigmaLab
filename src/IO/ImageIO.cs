@@ -3,9 +3,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using SigmaLab.Core;
+using VideoMeter.Core;
 
-namespace SigmaLab.IO
+namespace VideoMeter.IO
 {
     /// <summary>Открытие и сохранение изображений, преобразование в Bitmap для отображения.</summary>
     public static class ImageIO

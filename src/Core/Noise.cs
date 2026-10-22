@@ -1,6 +1,6 @@
 using System;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     public enum NoiseKind
     {

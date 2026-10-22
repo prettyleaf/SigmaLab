@@ -1,16 +1,16 @@
-﻿; Установщик СигмаЛаб (Inno Setup 6). Сборка: ../build.sh или ISCC.exe SigmaLab.iss
-#define AppName "СигмаЛаб"
-#define AppNameLat "SigmaLab"
+﻿; Установщик ВидеоМетра (Inno Setup 6). Сборка: ../build.sh или ISCC.exe VideoMeter.iss
+#define AppName "ВидеоМетр"
+#define AppNameLat "VideoMeter"
 #ifndef AppVersion
-  #define AppVersion "1.1.1"
+  #define AppVersion "1.2.0"
 #endif
-#define AppExe "SigmaLab.exe"
+#define AppExe "VideoMeter.exe"
 #ifndef BinDir
   #define BinDir "..\src\bin\Release\net35"
 #endif
 
 [Setup]
-AppId={{DE4F37C7-ED1B-42BC-8EC4-9ECCB5AB766F}
+AppId={{E595E9E1-9B35-4A42-B6BB-565614BDA987}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
@@ -59,12 +59,17 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 Filename: "{app}\{#AppExe}"; Description: "Запустить {#AppName}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+const
+  // AppId версий под прежним названием (СигмаЛаб)
+  OldAppId = '{DE4F37C7-ED1B-42BC-8EC4-9ECCB5AB766F}';
+
 function NetInstalled(const Key: String): Boolean;
 var
   V: Cardinal;
 begin
   Result := (RegQueryDWordValue(HKLM, Key, 'Install', V) and (V = 1));
-  if not Result then
+  // HKLM64 в 32-битной Windows вызывает исключение
+  if not Result and IsWin64 then
     Result := (RegQueryDWordValue(HKLM64, Key, 'Install', V) and (V = 1));
 end;
 
@@ -80,4 +85,36 @@ begin
       'Включение или отключение компонентов Windows) или установите .NET Framework 4.8 с сайта Microsoft.' + #13#10 + #13#10 +
       'Продолжить установку?', mbConfirmation, MB_YESNO) = IDYES;
   end;
+end;
+
+// Деинсталлятор версии под прежним названием или '', если она не установлена
+function OldUninstaller(): String;
+var
+  Key, S: String;
+begin
+  Result := '';
+  Key := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + OldAppId + '_is1';
+  if not RegQueryStringValue(HKCU, Key, 'UninstallString', S) then
+    if not RegQueryStringValue(HKLM32, Key, 'UninstallString', S) then
+    begin
+      if not IsWin64 then Exit;
+      if not RegQueryStringValue(HKLM64, Key, 'UninstallString', S) then Exit;
+    end;
+  S := RemoveQuotes(S);
+  if FileExists(S) then Result := S;
+end;
+
+// У прежней версии другой AppId, поэтому без удаления обе стояли бы рядом.
+// Настройки в %APPDATA% деинсталлятор не трогает — программа переносит их сама.
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Uninst: String;
+  Code: Integer;
+begin
+  Result := '';
+  Uninst := OldUninstaller();
+  if Uninst = '' then Exit;
+  if not ShellExec('', Uninst, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then
+    Result := 'Не удалось удалить прежнюю версию программы (СигмаЛаб). Удалите её в «Панель управления › ' +
+      'Программы и компоненты» и запустите установку снова.';
 end;

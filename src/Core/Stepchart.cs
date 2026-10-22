@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     public enum ZoneDetection { Automatic, Equal }
     public enum DetrendMode { None, Plane, Quadratic }
@@ -48,7 +48,7 @@ namespace SigmaLab.Core
         public static readonly ChartType[] Charts =
         {
             new ChartType { Title = "Density step = 0.10 REFLECTIVE (Kodak Q-13, Q-14, …)", Step = 0.10, First = 0.05, Zones = 20 },
-            new ChartType { Title = "Density step = 0.10 — таблица СигмаЛаб (20 градаций, D от 0)", Step = 0.10, First = 0.00, Zones = 20 },
+            new ChartType { Title = "Density step = 0.10 — таблица ВидеоМетра (20 градаций, D от 0)", Step = 0.10, First = 0.00, Zones = 20 },
             new ChartType { Title = "Density step = 0.15 TRANSMISSIVE (Stouffer T4110)", Step = 0.15, First = 0.05, Zones = 41 },
             new ChartType { Title = "Density step = 0.10 TRANSMISSIVE (Stouffer T2115)", Step = 0.10, First = 0.05, Zones = 21 },
             new ChartType { Title = "Density step = 0.05 TRANSMISSIVE (Stouffer T3110)", Step = 0.05, First = 0.05, Zones = 31 },
@@ -130,16 +130,16 @@ namespace SigmaLab.Core
         {
             switch (Settings.Fig2Lower)
             {
-                case SigmaLab.Core.Fig2Lower.Noise255: return 100 * z.Noise[ch] / Settings.Saturation;
-                case SigmaLab.Core.Fig2Lower.PixelSnrDb: return z.SnrDb(ch);
-                case SigmaLab.Core.Fig2Lower.PixelSnrRatio: return z.SnrRatio(ch);
+                case VideoMeter.Core.Fig2Lower.Noise255: return 100 * z.Noise[ch] / Settings.Saturation;
+                case VideoMeter.Core.Fig2Lower.PixelSnrDb: return z.SnrDb(ch);
+                case VideoMeter.Core.Fig2Lower.PixelSnrRatio: return z.SnrRatio(ch);
                 default: return z.Noise[ch];
             }
         }
 
         public double Fig2Middle(StepZone z, int ch)
         {
-            return Settings.Fig2Middle == SigmaLab.Core.Fig2Middle.FStopNoise ? z.FStopNoise[ch] : z.FStopSnr(ch);
+            return Settings.Fig2Middle == VideoMeter.Core.Fig2Middle.FStopNoise ? z.FStopNoise[ch] : z.FStopSnr(ch);
         }
     }
 

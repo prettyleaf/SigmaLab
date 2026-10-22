@@ -5,10 +5,10 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using SigmaLab.Core;
-using SigmaLab.IO;
+using VideoMeter.Core;
+using VideoMeter.IO;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     /// <summary>Результаты Stepchart: рисунки 1 и 2 (как в Imatest) и таблица по зонам.</summary>
     public sealed class StepchartResultsForm : Form

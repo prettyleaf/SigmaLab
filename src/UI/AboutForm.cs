@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     public sealed class AboutForm : Form
     {
@@ -38,7 +38,7 @@ namespace SigmaLab.UI
             Version v = Assembly.GetExecutingAssembly().GetName().Version;
             var sub = new Label
             {
-                Text = "SigmaLab, версия " + v.Major + "." + v.Minor + "." + v.Build + "\n" +
+                Text = "VideoMeter, версия " + v.Major + "." + v.Minor + "." + v.Build + "\n" +
                        "Программа кафедры телевидения и управления ТУСУР\n" +
                        "Измерение характеристик сигналов и шумов в ТВ-изображении",
                 ForeColor = Color.FromArgb(225, 225, 245),
@@ -95,7 +95,7 @@ namespace SigmaLab.UI
     {
         public static string LoadText()
         {
-            using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("SigmaLab.license.txt"))
+            using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("VideoMeter.license.txt"))
             using (var r = new StreamReader(s, Encoding.UTF8))
                 return r.ReadToEnd();
         }
@@ -147,10 +147,10 @@ namespace SigmaLab.UI
         {
             try
             {
-                string dir = Path.Combine(Path.GetTempPath(), "SigmaLab");
+                string dir = Path.Combine(Path.GetTempPath(), "VideoMeter");
                 Directory.CreateDirectory(dir);
-                string file = Path.Combine(dir, "SigmaLab_help.html");
-                using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("SigmaLab.help.html"))
+                string file = Path.Combine(dir, "VideoMeter_help.html");
+                using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("VideoMeter.help.html"))
                 using (var r = new StreamReader(s, Encoding.UTF8))
                     File.WriteAllText(file, r.ReadToEnd(), new UTF8Encoding(true));
                 string target = file;

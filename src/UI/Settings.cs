@@ -2,31 +2,37 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using SigmaLab.Core;
-using SigmaLab.IO;
+using VideoMeter.Core;
+using VideoMeter.IO;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
-    /// <summary>Настройки пользователя (%APPDATA%\SigmaLab\settings.ini).</summary>
+    /// <summary>Настройки пользователя (%APPDATA%\VideoMeter\settings.ini).</summary>
     public static class Settings
     {
         public static string LastDir = "";
         public static bool CalcFloatDefault;
         public static readonly List<string> Recent = new List<string>();
 
-        private static string FilePath
+        private static string Dir
         {
-            get
-            {
-                string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SigmaLab");
-                return Path.Combine(dir, "settings.ini");
-            }
+            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VideoMeter"); }
+        }
+
+        private static string FilePath { get { return Path.Combine(Dir, "settings.ini"); } }
+
+        /// <summary>Переносит настройки из папки прежнего названия программы (SigmaLab).</summary>
+        private static void MigrateOldDir()
+        {
+            string old = Path.Combine(Path.GetDirectoryName(Dir), "SigmaLab");
+            if (!Directory.Exists(Dir) && Directory.Exists(old)) Directory.Move(old, Dir);
         }
 
         public static void Load()
         {
             try
             {
+                MigrateOldDir();
                 if (!File.Exists(FilePath)) return;
                 foreach (string line in File.ReadAllLines(FilePath, Encoding.UTF8))
                 {

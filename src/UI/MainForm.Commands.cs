@@ -5,10 +5,10 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using SigmaLab.Core;
-using SigmaLab.IO;
+using VideoMeter.Core;
+using VideoMeter.IO;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     public sealed partial class MainForm
     {

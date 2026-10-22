@@ -4,10 +4,10 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using SigmaLab.Core;
-using SigmaLab.IO;
+using VideoMeter.Core;
+using VideoMeter.IO;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     /// <summary>Расчёт ОСШ: по введённым M и σ, а также ОСШ и ПОСШ (PSNR) изображения относительно эталона.</summary>
     public sealed class PsnrForm : Form

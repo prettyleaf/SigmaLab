@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     /// <summary>Векторные иконки 16×16 (рисуются кодом, масштабируются под DPI).</summary>
     public static class Icons

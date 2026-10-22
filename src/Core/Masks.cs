@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     /// <summary>Маски 3×3 из методички (рис. 4.18), часть из них — с произвольным размером.</summary>
     public enum MaskKind

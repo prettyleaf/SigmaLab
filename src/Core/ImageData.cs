@@ -1,6 +1,6 @@
 using System;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     /// <summary>Тип пикселей. Повторяет основные типы ImageJ.</summary>
     public enum PixelType

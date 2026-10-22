@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using SigmaLab.Core;
+using VideoMeter.Core;
 
-namespace SigmaLab.IO
+namespace VideoMeter.IO
 {
     /// <summary>
     /// Извлечение кадров из видеозаписи: AVI — средствами Windows (Video for Windows, avifil32.dll),
@@ -85,7 +85,7 @@ namespace SigmaLab.IO
 
         private static List<ImageData> ExtractFfmpeg(string ffmpeg, string path, int start, int count, int step)
         {
-            string tmp = Path.Combine(Path.GetTempPath(), "SigmaLab_frames_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            string tmp = Path.Combine(Path.GetTempPath(), "VideoMeter_frames_" + Guid.NewGuid().ToString("N").Substring(0, 8));
             Directory.CreateDirectory(tmp);
             try
             {

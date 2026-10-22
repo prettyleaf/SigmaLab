@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using SigmaLab.Core;
-using SigmaLab.IO;
+using VideoMeter.Core;
+using VideoMeter.IO;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     /// <summary>Открытое изображение: данные, выделение, одноуровневая отмена (как в ImageJ).</summary>
     public sealed class ImageDoc

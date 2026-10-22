@@ -5,16 +5,16 @@
     <TargetFramework>net35</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <AssemblyName>SigmaLab</AssemblyName>
-    <RootNamespace>SigmaLab</RootNamespace>
+    <AssemblyName>VideoMeter</AssemblyName>
+    <RootNamespace>VideoMeter</RootNamespace>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
-    <Version>1.1.1</Version>
-    <FileVersion>1.1.1.0</FileVersion>
-    <Product>СигмаЛаб (SigmaLab)</Product>
-    <AssemblyTitle>СигмаЛаб — измерение сигналов и шумов в ТВ-изображении</AssemblyTitle>
+    <Version>1.2.0</Version>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Product>ВидеоМетр (VideoMeter)</Product>
+    <AssemblyTitle>ВидеоМетр — измерение сигналов и шумов в ТВ-изображении</AssemblyTitle>
     <Description>Учебная программа кафедры телевидения и управления ТУСУР: обработка и анализ изображений, модуль Stepchart, расчёт ОСШ и ПОСШ.</Description>
     <Company>ТУСУР, кафедра телевидения и управления (ТУ)</Company>
     <Authors>Колесников И.Д.</Authors>
@@ -29,8 +29,8 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
-    <EmbeddedResource Include="Resources\app.ico" LogicalName="SigmaLab.app.ico" />
-    <EmbeddedResource Include="Resources\help.html" LogicalName="SigmaLab.help.html" />
-    <EmbeddedResource Include="Resources\license.txt" LogicalName="SigmaLab.license.txt" />
+    <EmbeddedResource Include="Resources\app.ico" LogicalName="VideoMeter.app.ico" />
+    <EmbeddedResource Include="Resources\help.html" LogicalName="VideoMeter.help.html" />
+    <EmbeddedResource Include="Resources\license.txt" LogicalName="VideoMeter.license.txt" />
   </ItemGroup>
 </Project>

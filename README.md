@@ -1,4 +1,4 @@
-# СигмаЛаб (SigmaLab)
+# ВидеоМетр (VideoMeter)
 
 Учебная программа кафедры телевидения и управления (ТУ) ТУСУР для лабораторной работы № 1
 «Измерение характеристик сигналов и шумов в телевизионном изображении». Заменяет используемые в работе
@@ -38,13 +38,13 @@ Windows 7 SP1, 8.1, 10, 11 (32 и 64 бит). Написано на C# / WinForm
 Нужен .NET SDK 8+ (на Linux или Windows). Установщик — Inno Setup 6 (на Linux через wine).
 
 ```sh
-./build.sh          # Linux: тесты ядра, SigmaLab.exe, ../dist/*-portable.zip и ../dist/*-setup.exe
+./build.sh          # Linux: тесты ядра, VideoMeter.exe, ../dist/*-portable.zip и ../dist/*-setup.exe
 build.cmd           # Windows
 ```
 
-Результат: `src/bin/Release/net35/SigmaLab.exe` (+ `SigmaLab.exe.config`, он обязателен рядом с exe).
+Результат: `src/bin/Release/net35/VideoMeter.exe` (+ `VideoMeter.exe.config`, он обязателен рядом с exe).
 
-Релиз собирает GitHub Actions (`.github/workflows/release.yml`): поднять `<Version>` в `src/SigmaLab.csproj`, закоммитить и
+Релиз собирает GitHub Actions (`.github/workflows/release.yml`): поднять `<Version>` в `src/VideoMeter.csproj`, закоммитить и
 отправить тег той же версии — установщик и портативный архив появятся в файлах релиза.
 
 ```sh
@@ -62,4 +62,4 @@ tests      тесты ядра (.NET 8): сверка с прямым переб
 installer  скрипт Inno Setup
 ```
 
-`SigmaLab.exe --shots <папка>` — служебный режим самопроверки интерфейса (снимки окон на синтетических данных).
+`VideoMeter.exe --shots <папка>` — служебный режим самопроверки интерфейса (снимки окон на синтетических данных).

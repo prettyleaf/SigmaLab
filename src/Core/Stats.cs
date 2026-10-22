@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace SigmaLab.Core
+namespace VideoMeter.Core
 {
     /// <summary>Статистика области: те же величины, что Analyze › Measure / Histogram в ImageJ.</summary>
     public struct RoiStats

@@ -1,6 +1,6 @@
 using System;
 using System.Drawing;
-using SigmaLab.Core;
+using VideoMeter.Core;
 
 static class T
 {
@@ -223,8 +223,8 @@ static class T
                 for (int i = 0; i < src.PixelCount; i++)
                     src.Planes[c][i] = pt == PixelType.Gray16 ? rng.Next(65536) : (ImageData.IsFloatType(pt) ? (float)(rng.NextDouble() * 1000 - 500) : rng.Next(256));
             var ms = new System.IO.MemoryStream();
-            using (var bw = new System.IO.BinaryWriter(ms)) SigmaLab.IO.TiffIO.Write(src, bw);
-            var back = SigmaLab.IO.TiffIO.TryRead(ms.ToArray());
+            using (var bw = new System.IO.BinaryWriter(ms)) VideoMeter.IO.TiffIO.Write(src, bw);
+            var back = VideoMeter.IO.TiffIO.TryRead(ms.ToArray());
             Check(back != null && back.Type == pt && back.Width == 31 && back.Height == 17, "tiff type " + pt);
             double md = 0;
             if (back != null) for (int c = 0; c < src.Channels; c++) for (int i = 0; i < src.PixelCount; i++) md = Math.Max(md, Math.Abs(src.Planes[c][i] - back.Planes[c][i]));

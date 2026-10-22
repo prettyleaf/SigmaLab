@@ -3,9 +3,9 @@ using System.Drawing;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
-using SigmaLab.Core;
+using VideoMeter.Core;
 
-namespace SigmaLab.UI
+namespace VideoMeter.UI
 {
     /// <summary>Гистограмма области (Analyze › Histogram).</summary>
     public sealed class HistogramForm : Form
