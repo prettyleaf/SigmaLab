@@ -2,7 +2,7 @@
 #define AppName "СигмаЛаб"
 #define AppNameLat "SigmaLab"
 #ifndef AppVersion
-  #define AppVersion "1.1.0"
+  #define AppVersion "1.1.1"
 #endif
 #define AppExe "SigmaLab.exe"
 #ifndef BinDir
