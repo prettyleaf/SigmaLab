@@ -504,16 +504,30 @@ namespace SigmaLab.UI
             {
                 if (!string.IsNullOrEmpty(Settings.LastDir) && Directory.Exists(Settings.LastDir)) fb.SelectedPath = Settings.LastDir;
                 if (fb.ShowDialog(this) != DialogResult.OK) return;
-                Ui.Busy(this, () =>
+                string baseName = FreeBaseName(fb.SelectedPath, PlotView.Safe("Stepchart " + _r.FileName));
+                bool ok = Ui.Busy(this, () =>
                 {
-                    string baseName = PlotView.Safe("Stepchart " + _r.FileName);
                     for (int i = 0; i < _figures.Count; i++)
                         using (var b = _figures[i].Value.Render())
                             ImageIO.SaveBitmap(b, Path.Combine(fb.SelectedPath, baseName + " рис" + (i + 1) + ".tif"));
                     File.WriteAllText(Path.Combine(fb.SelectedPath, baseName + ".csv"), TableCsv(), new UTF8Encoding(true));
                     Settings.LastDir = fb.SelectedPath;
                 });
-                Ui.Info(this, "Сохранено в папку:\n" + fb.SelectedPath);
+                if (ok) Ui.Info(this, "Сохранено в папку:\n" + fb.SelectedPath + "\n\nИмя: " + baseName);
+            }
+        }
+
+        /// <summary>Имя серии, ни один файл которой (рис1…рисN, .csv) ещё не существует в папке:
+        /// «Stepchart X», иначе «Stepchart X (2)», «Stepchart X (3)»… — чтобы не перезаписать прошлые результаты.</summary>
+        private string FreeBaseName(string dir, string baseName)
+        {
+            for (int n = 1; ; n++)
+            {
+                string name = n == 1 ? baseName : baseName + " (" + n + ")";
+                bool taken = File.Exists(Path.Combine(dir, name + ".csv"));
+                for (int i = 0; i < _figures.Count && !taken; i++)
+                    taken = File.Exists(Path.Combine(dir, name + " рис" + (i + 1) + ".tif"));
+                if (!taken) return name;
             }
         }
 
